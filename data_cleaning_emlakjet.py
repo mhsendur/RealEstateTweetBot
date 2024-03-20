@@ -54,6 +54,12 @@ def cleanse_and_preprocess_data(data):
         cleansed_data.append(cleansed_item)
     return cleansed_data
 
+def remove_duplicates(data):
+    unique_data = {}
+    for item in data:
+        unique_data[item['id']] = item
+    return list(unique_data.values())
+
 
 def write_json_data(file_path, data):
     with open(file_path, 'w', encoding='utf-8') as file:
