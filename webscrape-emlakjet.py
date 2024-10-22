@@ -1,10 +1,8 @@
-import requests
-import json
-import time
-import aiohttp
 import asyncio
 import json
-import backoff  
+import backoff
+import ssl
+import aiohttp
 
 provinces = [
     "Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", 
@@ -21,10 +19,14 @@ turkish_to_english_map = {
 def turkish_to_english(text):
     return ''.join(turkish_to_english_map.get(char, char) for char in text)
 
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
+
 async def fetch_listings(session, province, page):
     province_english = turkish_to_english(province).lower()
     url = f"https://search.emlakjet.com/search/v1/listing/satilik-konut/istanbul-{province_english}/{page}"
-    async with session.get(url) as response:
+    async with session.get(url, ssl=ssl_context) as response:
         if response.status == 200:
             data = await response.json()
             records = data['listingCard']['records']
@@ -38,7 +40,7 @@ async def fetch_listings(session, province, page):
 async def fetch_additional_info(session, listing_id):
     try:
         url = f"https://api.emlakjet.com/e6t/v1/listing/{listing_id}/"
-        async with session.get(url) as response:
+        async with session.get(url, ssl=ssl_context) as response:
             if response.status == 200:
                 data = await response.json()
                 result = data.get('result', {})
@@ -79,5 +81,5 @@ async def main():
 if __name__ == "__main__":
     records = asyncio.run(main())
 
-    with open('istanbul_emlakjet_all_records_updated.json', 'w', encoding='utf-8') as f:
+    with open('istanbul_emlakjet_all_records.json', 'w', encoding='utf-8') as f:
         json.dump(records, f, ensure_ascii=False, indent=4)
