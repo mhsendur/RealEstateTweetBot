@@ -98,6 +98,9 @@ def cleanse_and_preprocess_data(data):
         if not images or not title:
             continue
         
+        ilan_bitis = item.get('ilan_bitis')
+        is_active = not bool(item.get('ilan_bitis'))
+
         info = process_info_fields(item.get('info', []))  
         cleansed_item = {
             'id': item['id'],
@@ -113,6 +116,9 @@ def cleanse_and_preprocess_data(data):
             'description': description,
             'info': info,
             'location': item['location'],
+            'ilanda_kalis_suresi': item['ilanda_kalis_suresi'],
+            'ilan_bitis': ilan_bitis,
+            'is_active': is_active
         }
         
         cleansed_data.append(cleansed_item)

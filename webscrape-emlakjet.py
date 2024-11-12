@@ -3,13 +3,16 @@ import json
 import backoff
 import ssl
 import aiohttp
+import os
+from datetime import datetime, timedelta
 
 provinces = [
     "Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", 
     "Bayrampaşa", "Beşiktaş", "Beykoz", "Beylikdüzü", "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", 
     "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy", "Kağıthane", 
     "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", "Şile", "Silivri", "Şişli", 
-    "Sultanbeyli", "Sultangazi", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"]
+    "Sultanbeyli", "Sultangazi", "Tuzla", "Ümraniye", "Üsküdar", "Zeytinburnu"
+]
 
 turkish_to_english_map = {
     "ç": "c", "ğ": "g", "ı": "i", "ö": "o", "ş": "s", "ü": "u",
@@ -78,8 +81,51 @@ async def main():
     print(f"Total number of collected records: {len(all_records)}")
     return all_records
 
+def save_records(records, filename="istanbul_emlakjet_all_records_updated.json"):
+    # Load existing data if the file exists, otherwise initialize an empty dictionary
+    if os.path.exists(filename):
+        os.rename(filename, "istanbul_emlakjet_all_records_old.json")
+    
+    # Save the new records to the updated JSON file
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(records, f, ensure_ascii=False, indent=4)
+
+
+def update_emlakjet_data(new_data):
+    today = datetime.now().strftime('%Y-%m-%d')
+    old_filename = 'istanbul_emlakjet_all_records_old.json'
+    
+    # Load existing data from the old file if it exists, otherwise initialize an empty dictionary
+    if os.path.exists(old_filename):
+        with open(old_filename, 'r') as f:
+            existing_data = {ad['id']: ad for ad in json.load(f)}
+    else:
+        existing_data = {}
+
+    # Process new data to update existing ads and add new ads
+    for ad in new_data:
+        ad_id = ad['id']
+        ad['ilanda_kalis_suresi'] = (datetime.now() - datetime.strptime(ad['createdAt'], '%Y-%m-%dT%H:%M:%SZ')).days
+        if ad_id in existing_data:
+            # Overwrite the existing ad with updated information
+            existing_data[ad_id] = ad
+        else:
+            # Add new ad
+            existing_data[ad_id] = ad
+
+    # Check for deleted ads and mark them with 'ilan_bitis' if not in new data
+    new_ad_ids = {ad['id'] for ad in new_data}
+    for ad_id, ad in existing_data.items():
+        if ad_id not in new_ad_ids:
+            ad['ilan_bitis'] = today
+            ad['ilanda_kalis_suresi'] = (datetime.now() - datetime.strptime(ad['createdAt'], '%Y-%m-%dT%H:%M:%SZ')).days
+
+    # Write the updated data to the updated JSON file
+    with open("istanbul_emlakjet_all_records_updated.json", 'w', encoding='utf-8') as f:
+        json.dump(list(existing_data.values()), f, ensure_ascii=False, indent=4)
+
+
 if __name__ == "__main__":
     records = asyncio.run(main())
-
-    with open('istanbul_emlakjet_all_records.json', 'w', encoding='utf-8') as f:
-        json.dump(records, f, ensure_ascii=False, indent=4)
+    save_records(records)  # Saves the new records to "istanbul_emlakjet_all_records_updated.json"
+    update_emlakjet_data(records)  # Updates with new data and keeps old data intact
