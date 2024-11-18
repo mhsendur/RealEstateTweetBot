@@ -56,7 +56,7 @@ This project involves the development of a Twitter bot that autonomously selects
 
 ## Model Training and Evaluation
 
-- **Model Type**: Random Forest, Gradient Boosting, and XGBoost have been tested for value prediction.
+- **Model Type**: Random Forest, Gradient Boosting, XGBoost and other model types have been tested for value prediction.
     
 - **Feature Engineering**: A significant effort has been made in feature engineering to improve the model's predictive performance. Below is a detailed overview of the feature engineering process and features that have been tried:
     
