@@ -20,10 +20,14 @@ def save_to_csv(data, filename='usd_try_rates.csv'):
     # Save the DataFrame to a CSV file
     data.to_csv(filename, index=False)
 
-# Get USD/TRY rate history
-usd_try_data = get_usd_try_rate_history()
+def update_usd_data():
 
-# Save the data to a CSV file
-save_to_csv(usd_try_data)
+    # Get USD/TRY rate history
+    usd_try_data = get_usd_try_rate_history()
 
-print("USD/TRY rate history for the past 12 months has been saved to 'usd_try_rates.csv'.")
+    # Save the data to a CSV file
+    save_to_csv(usd_try_data)
+
+    print("USD/TRY rate history for the past 12 months has been saved to 'usd_try_rates.csv'.")
+
+#update_usd_data()
