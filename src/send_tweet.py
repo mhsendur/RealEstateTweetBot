@@ -114,13 +114,23 @@ def process_first_listing(top_urls_file="top_listings_ids_and_urls.txt"):
         print(f"Error processing Listing ID {listing_id}: {e}")
 
 def save_top_urls(file_path, top_urls):
-    """Save the updated list of URLs back to the file."""
-    with open(file_path, "w", encoding="utf-8") as file:
-        json.dump(top_urls, file, ensure_ascii=False, indent=4)
+    """Save the updated list of URLs back to the text file in the required format."""
+    try:
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(f"Top {len(top_urls)} Best Valued Listings:\n")
+            file.write("=" * (len(top_urls) * 2) + "\n")
+            for listing in top_urls:
+                file.write(f"ID: {listing['id']}\n")
+                file.write(f"URL: {listing['url']}\n\n")
+        print(f"Successfully saved {len(top_urls)} listings to {file_path}")
+    except Exception as e:
+        print(f"Error saving to file {file_path}: {e}")
 
-def process_random_listing(top_urls_file="top_listings_ids_and_urls.txt"):
+
+def process_random_listing(top_urls_file="top_listings_ids_and_urls.txt", json_file="istanbul_emlakjet_all_records_updated.json"):
     """Process and tweet a random listing, then remove it from the list."""
     top_urls = load_top_urls(top_urls_file)
+    listings = load_listings_from_json(json_file)
 
     if not top_urls:
         print("No listings found in the file. Exiting...")
@@ -129,14 +139,34 @@ def process_random_listing(top_urls_file="top_listings_ids_and_urls.txt"):
     # Randomly select a listing from the list
     selected_listing = random.choice(top_urls)
     listing_id = selected_listing["id"]
-    url = f"https://www.emlakjet.com{selected_listing['url']}"
+    url = selected_listing["url"]
 
     try:
-        # Use OpenAI to generate tweet content
-        raw_data = f"Listing ID: {listing_id}\nURL: {url}"
-        tweet_text = OpenAI_API.create_tweet_text(raw_data, url)
+        # Find the corresponding listing in the JSON data
+        listing = find_listing_by_id(listings, listing_id)
+        if not listing:
+            print(f"Listing ID {listing_id} not found in the JSON data. Skipping...")
+            return
 
-        # Post the tweet
+        # Extract details for the tweet
+        title = listing.get("title", "N/A")
+        price = listing.get("priceDetail", {}).get("price", "N/A")
+        location = listing.get("locationSummary", "N/A")
+        description = listing.get("description", "No description available")
+
+        print(f"Processing Listing ID: {listing_id}, Title: {title}")
+
+        # Format raw data for the tweet
+        raw_data = f"Başlık: {title}\nFiyat: {price} TL\nKonum: {location}\nAçıklama: {description}"
+
+        # Generate the tweet text using OpenAI
+        try:
+            tweet_text = OpenAI_API.create_tweet_text(raw_data, url)
+        except Exception as e:
+            print(f"Error generating tweet text for Listing ID {listing_id}: {e}")
+            return
+
+        # Post the tweet using Twitter API
         Twitter_API.send_tweet_v2(tweet_text)
 
         # Remove the selected listing from the list

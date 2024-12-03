@@ -69,7 +69,7 @@ def process_info_fields(info_list):
             value = item['value']
 
             # Convert 'net_square' and 'gross_square' values from "XX m2" to numeric values
-            if key in ['net_square', 'gross_square'] and value.endswith("m2"):
+            if key in ['net_square', 'gross_square'] and value and value.endswith("m2"):
                 numeric_part = value[:-2].strip()  # Remove the " m2" part
                 try:
                     # Convert the numeric part to an integer if possible, or a float if it contains decimals

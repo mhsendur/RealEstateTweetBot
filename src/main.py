@@ -10,7 +10,8 @@ def main():
 
         for i in range(12):
             send_tweet.send_tweet()
+            print("SENT", i)
             time.sleep(7200)
-
+            
 if __name__ == "__main__":
     main()
