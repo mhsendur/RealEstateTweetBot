@@ -1,8 +1,14 @@
 Top 20 Best Valued Listings:
 ========================================
 
-ID: 15950685
-URL: https://www.emlakjet.com/ilan/erenkoy-marmaray-yakin-21-sifir-90m2-balkon-ebeveyn-banyo-klima-satilik-daire-kapali-mutfak-cadde-15950685/
+ID: 16152700
+URL: https://www.emlakjet.com/ilan/suadiye-saskinbakkalda-yatirimlik-31-daire-emlak-masasi-16152700/
+
+ID: 16059628
+URL: https://www.emlakjet.com/ilan/kozyataginda-yesillikler-icinde-200m2-41-ara-kat-guney-cephe-16059628/
+
+ID: 15560709
+URL: https://www.emlakjet.com/ilan/cekmekoy-nef-ormantepe-de-35000-getirili-2-kat-127m2-satilik-21-15560709/
 
 ID: 15874551
 URL: https://www.emlakjet.com/ilan/turyap-tan-selimpasa-da-280m2-arsali-31-sifir-villa-15874551/
@@ -10,54 +16,48 @@ URL: https://www.emlakjet.com/ilan/turyap-tan-selimpasa-da-280m2-arsali-31-sifir
 ID: 16341963
 URL: https://www.emlakjet.com/ilan/idealtepe-de-marmaraya-yakin-on-cephe-31-daire-16341963/
 
-ID: 15526133
-URL: https://www.emlakjet.com/ilan/elit-emlak-tan-emlak-konut-1-etapda-acil-satilik-luks-daire-15526133/
-
-ID: 16324270
-URL: https://www.emlakjet.com/ilan/turyap-bostanci-kucukyali-da-marmaray-a-yakin-140m-31-dubleks-16324270/
-
-ID: 15721414
-URL: https://www.emlakjet.com/ilan/devadan-sifir-binada-asansorlu-acik-kapali-otoparkli-31-dublex-15721414/
-
-ID: 15400713
-URL: https://www.emlakjet.com/ilan/silivri-piri-mehmet-pasa-mahallesi-nde-satilik-komple-bina-15400713/
-
-ID: 15562450
-URL: https://www.emlakjet.com/ilan/31-deniz-peyzaj-manzarali-dublex-daire-15562450/
-
-ID: 15479910
-URL: https://www.emlakjet.com/ilan/istanbul-cekmekoy-camlik-mahallesi-15479910/
-
-ID: 16059628
-URL: https://www.emlakjet.com/ilan/kozyataginda-yesillikler-icinde-200m2-41-ara-kat-guney-cephe-16059628/
-
-ID: 16349955
-URL: https://www.emlakjet.com/ilan/erciyes-den-tek-yetkili-adatepe-sitesinde-31-balkonlu-130-m2-16349955/
+ID: 16231583
+URL: https://www.emlakjet.com/ilan/eyupsultan-nisancada-satilik-dublex-16231583/
 
 ID: 16290665
 URL: https://www.emlakjet.com/ilan/suadiye-minibus-caddesine-yakin-projeden-satilik-16290665/
 
-ID: 15304503
-URL: https://www.emlakjet.com/ilan/cadde-ve-duraklara-400m-mesafede-onu-acik-bahce-balkonlu-21-satilik-15304503/
+ID: 15053764
+URL: https://www.emlakjet.com/ilan/kucukmece-ful-gol-manzarali-yabanci-satisina-uygun-sifir-daire-15053764/
 
 ID: 16008322
 URL: https://www.emlakjet.com/ilan/tuzla-mercan-sifir-binada-satilik-21-16008322/
 
-ID: 15957310
-URL: https://www.emlakjet.com/ilan/camlik-da-sahil-ve-marmaraya-yakin-genis-sifir32-dubl-15957310/
+ID: 15400713
+URL: https://www.emlakjet.com/ilan/silivri-piri-mehmet-pasa-mahallesi-nde-satilik-komple-bina-15400713/
 
 ID: 16104021
 URL: https://www.emlakjet.com/ilan/halkali-lalesehir-konaklari-satilik-31-daire-16104021/
 
-ID: 16137166
-URL: https://www.emlakjet.com/ilan/acibadem-nisantasi-bolgesinde-satilik-31-sifir-daire-16137166/
+ID: 15479910
+URL: https://www.emlakjet.com/ilan/istanbul-cekmekoy-camlik-mahallesi-15479910/
+
+ID: 16324270
+URL: https://www.emlakjet.com/ilan/turyap-bostanci-kucukyali-da-marmaray-a-yakin-140m-31-dubleks-16324270/
+
+ID: 15526133
+URL: https://www.emlakjet.com/ilan/elit-emlak-tan-emlak-konut-1-etapda-acil-satilik-luks-daire-15526133/
+
+ID: 15304503
+URL: https://www.emlakjet.com/ilan/cadde-ve-duraklara-400m-mesafede-onu-acik-bahce-balkonlu-21-satilik-15304503/
+
+ID: 15024208
+URL: https://www.emlakjet.com/ilan/pendik-sapanbaglari-trion-life-sitesinde-41-dubleks-katta-tek-satilik-daire-15024208/
 
 ID: 16297894
 URL: https://www.emlakjet.com/ilan/istanbul-aksaray-metrosunun-yani-basinda-yatirimlik-daire-16297894/
 
-ID: 15781648
-URL: https://www.emlakjet.com/ilan/beylikduzu-makyol-yasamin-en-uygun-dairesi-fume-15781648/
+ID: 16349955
+URL: https://www.emlakjet.com/ilan/erciyes-den-tek-yetkili-adatepe-sitesinde-31-balkonlu-130-m2-16349955/
 
-ID: 15463543
-URL: https://www.emlakjet.com/ilan/halil-emlaktan-yavuz-sultan-selim-mah-de-4-katli-satilik-bina-15463543/
+ID: 16137166
+URL: https://www.emlakjet.com/ilan/acibadem-nisantasi-bolgesinde-satilik-31-sifir-daire-16137166/
+
+ID: 16325005
+URL: https://www.emlakjet.com/ilan/hatboyu-cadde-uzerinde-deniz-manzarali-21-100m2-daire-16325005/
 

@@ -125,7 +125,42 @@ def update_emlakjet_data(new_data):
         json.dump(list(existing_data.values()), f, ensure_ascii=False, indent=4)
 
 
+SCRAPE_LAST_RUN_FILE = "scrape_last_run.txt"
+
+def get_last_run_time():
+    """Get the time of the last scraper run from the file."""
+    if os.path.exists(SCRAPE_LAST_RUN_FILE):
+        with open(SCRAPE_LAST_RUN_FILE, "r") as file:
+            last_run_str = file.read().strip()
+            last_run_time = datetime.strptime(last_run_str, "%Y-%m-%d %H:%M:%S")
+            return last_run_time
+    else:
+        return datetime.min
+    
+def update_last_run_time():
+    """Write the current time to the last run file."""
+    with open(SCRAPE_LAST_RUN_FILE, "w") as file:
+        file.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+def run_scraper():
+    """Run the scraper if it has been more than 24 hours since the last run."""
+    # Get the time of the last run
+    last_run_time = get_last_run_time()
+    
+    # Check if it has been more than 24 hours since the last run
+    if datetime.now() - last_run_time > timedelta(hours=24):
+        print("More than 24 hours since the last run. Running scraper...")
+        
+        # Run the scraper (synchronously)
+        records = asyncio.run(main())
+        save_records(records)
+        update_emlakjet_data(records)
+        
+        # Update the last run time after the scraper runs
+        update_last_run_time()
+    else:
+        print("It has been less than 24 hours since the last run. Skipping the scraper.")
+
+
 if __name__ == "__main__":
-    records = asyncio.run(main())
-    save_records(records)  # Saves the new records to "istanbul_emlakjet_all_records_updated.json"
-    update_emlakjet_data(records)  # Updates with new data and keeps old data intact
+    run_scraper()
