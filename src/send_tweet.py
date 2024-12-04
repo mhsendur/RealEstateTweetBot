@@ -1,8 +1,26 @@
 import json
 import OpenAI_API
 import Twitter_API
-import credentials
 import random
+import requests
+import time
+
+
+def download_images(image_urls, max_images=4):
+    """Download images from URLs and save them locally."""
+    image_files = []
+    for i, url in enumerate(image_urls[:max_images]):
+        filename = f"downloaded_image_{i+1}.jpg"
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            with open(filename, 'wb') as f:
+                f.write(response.content)
+            image_files.append(filename)
+        except Exception as e:
+            print(f"Error downloading {url}: {e}")
+    return image_files
+
 
 def load_top_urls(file_name="top_listings_ids_and_urls.txt"):
     """Load the top URLs and their IDs from the text file."""
@@ -49,86 +67,9 @@ def find_listing_by_id(listings, listing_id):
             return listing
     return None
 
-def process_top_listings(top_urls_file="top_listings_ids_and_urls.txt", json_file="istanbul_emlakjet_all_records_updated.json"):
-    """Process the top listings using the URLs file and the JSON file."""
-    top_urls = load_top_urls(top_urls_file)
-    listings = load_listings_from_json(json_file)
 
-    for top_url in top_urls:
-        try:
-            listing_id = top_url["id"]
-            url = f"https://www.emlakjet.com{top_url['url']}"
-
-            # Find the corresponding listing in the JSON data
-            listing = find_listing_by_id(listings, listing_id)
-            if not listing:
-                print(f"Listing ID {listing_id} not found in the JSON data. Skipping...")
-                continue
-
-            # Extract details for the tweet
-            title = listing.get("title", "N/A")
-            price = listing.get("priceDetail", {}).get("price", "N/A")
-            location = listing.get("locationSummary", "N/A")
-            description = listing.get("description", "No description available")
-
-            print(f"Processing Listing ID: {listing_id}, Title: {title}")
-
-            # Format raw data for the tweet
-            raw_data = f"Başlık: {title}\nFiyat: {price} TL\nKonum: {location}\nAçıklama: {description}"
-
-            # Generate the tweet text using OpenAI
-            try:
-                tweet_text = OpenAI_API.create_tweet_text( raw_data, url)
-            except Exception as e:
-                print(f"Error generating tweet text for Listing ID {listing_id}: {e}")
-                continue
-
-            # Post the tweet using Twitter API
-            Twitter_API.send_tweet_v2(tweet_text)
-
-        except Exception as e:
-            print(f"Error processing Listing ID {listing_id}: {e}")
-
-
-def process_first_listing(top_urls_file="top_listings_ids_and_urls.txt"):
-    """Process and tweet the first listing."""
-    top_urls = load_top_urls(top_urls_file)
-
-    if not top_urls:
-        print("No listings found in the file. Exiting...")
-        return
-
-    # Get the first listing
-    first_listing = top_urls[1]
-    listing_id = first_listing["id"]
-    url = f"https://www.emlakjet.com{first_listing['url']}"
-
-    try:
-        # Use OpenAI to generate tweet content
-        raw_data = f"Listing ID: {listing_id}\nURL: {url}"
-        tweet_text = OpenAI_API.create_tweet_text(raw_data, url)
-
-        # Post the tweet
-        Twitter_API.send_tweet_v2(tweet_text)
-    except Exception as e:
-        print(f"Error processing Listing ID {listing_id}: {e}")
-
-def save_top_urls(file_path, top_urls):
-    """Save the updated list of URLs back to the text file in the required format."""
-    try:
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(f"Top {len(top_urls)} Best Valued Listings:\n")
-            file.write("=" * (len(top_urls) * 2) + "\n")
-            for listing in top_urls:
-                file.write(f"ID: {listing['id']}\n")
-                file.write(f"URL: {listing['url']}\n\n")
-        print(f"Successfully saved {len(top_urls)} listings to {file_path}")
-    except Exception as e:
-        print(f"Error saving to file {file_path}: {e}")
-
-
-def process_random_listing(top_urls_file="top_listings_ids_and_urls.txt", json_file="istanbul_emlakjet_all_records_updated.json"):
-    """Process and tweet a random listing, then remove it from the list."""
+def process_random_listing(top_urls_file="top_listings_ids_and_urls.txt", json_file="istanbul_emlakjet_all_records_updated.json", max_retries=3, retry_delay=60):
+    """Process and tweet a random listing, then remove it from the list with retry logic."""
     top_urls = load_top_urls(top_urls_file)
     listings = load_listings_from_json(json_file)
 
@@ -139,7 +80,7 @@ def process_random_listing(top_urls_file="top_listings_ids_and_urls.txt", json_f
     # Randomly select a listing from the list
     selected_listing = random.choice(top_urls)
     listing_id = selected_listing["id"]
-    url = selected_listing["url"]
+    url = f"https://www.emlakjet.com{selected_listing['url']}"
 
     try:
         # Find the corresponding listing in the JSON data
@@ -154,6 +95,9 @@ def process_random_listing(top_urls_file="top_listings_ids_and_urls.txt", json_f
         location = listing.get("locationSummary", "N/A")
         description = listing.get("description", "No description available")
 
+        # Download images
+        image_files = download_images(listing.get("imagesFullPath", []))
+
         print(f"Processing Listing ID: {listing_id}, Title: {title}")
 
         # Format raw data for the tweet
@@ -161,13 +105,30 @@ def process_random_listing(top_urls_file="top_listings_ids_and_urls.txt", json_f
 
         # Generate the tweet text using OpenAI
         try:
-            tweet_text = OpenAI_API.create_tweet_text(raw_data, url)
+            tweet_text = OpenAI_API.create_tweet_text(raw_data)
+            tweet_text += f"\n🔗 Link: {url}"  # Append the hardcoded link
         except Exception as e:
             print(f"Error generating tweet text for Listing ID {listing_id}: {e}")
             return
 
-        # Post the tweet using Twitter API
-        Twitter_API.send_tweet_v2(tweet_text)
+        # Retry logic for posting the tweet
+        retries = 0
+        while retries <= max_retries:
+            try:
+                Twitter_API.send_tweet_v2(tweet_text, image_files)
+                print("Tweet posted successfully!")
+                break  # Exit loop on success
+            except Twitter_API.TooManyRequests as e:
+                print(f"Rate limit reached: {e}")
+                retries += 1
+                if retries > max_retries:
+                    print("Maximum retries reached. Aborting.")
+                    break
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            except Exception as e:
+                print(f"Error posting tweet: {e}")
+                break  # Stop on other errors
 
         # Remove the selected listing from the list
         top_urls.remove(selected_listing)
@@ -179,10 +140,10 @@ def process_random_listing(top_urls_file="top_listings_ids_and_urls.txt", json_f
     except Exception as e:
         print(f"Error processing Listing ID {listing_id}: {e}")
 
+
 def send_tweet():
-    #process_first_listing()
-    #process_top_listings()    
     process_random_listing()
+
 
 if __name__ == "__main__":
     send_tweet()
