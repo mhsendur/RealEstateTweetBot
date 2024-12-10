@@ -2,6 +2,7 @@ import tweepy
 import credentials
 import time
 import os
+import requests
 
 # Initialize v1.1 API client for media upload
 auth = tweepy.OAuth1UserHandler(
