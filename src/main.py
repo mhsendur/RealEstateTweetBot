@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import time
 
 # Define Istanbul time-based tweet schedule (GMT+3)
-TWEET_TIMES = ["06:30", "09:30", "12:30", "15:30", "19:35"]
+TWEET_TIMES = ["06:30", "09:30", "12:30", "15:30", "19:47"]
 
 def run_daily_workflow():
     print("Starting daily scraping and modeling workflow...")
