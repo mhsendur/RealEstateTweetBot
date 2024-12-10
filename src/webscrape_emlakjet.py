@@ -7,9 +7,12 @@ import os
 from datetime import datetime, timedelta
 from google.cloud import storage
 
-# Define Google Cloud Storage settings
+# Google Cloud Storage settings
 GCS_BUCKET_NAME = "real-estate-bot-bucket"
 JSON_FILE_NAME = "istanbul_emlakjet_all_records_updated.json"
+
+# Maximum pages to scrape per province
+MAX_PAGES_PER_PROVINCE = 45
 
 # Initialize Google Cloud Storage client
 storage_client = storage.Client()
@@ -34,7 +37,9 @@ ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
+@backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=5, max_time=300)
 async def fetch_listings(session, province, page):
+    """Fetch property listings for a specific province and page."""
     province_english = turkish_to_english(province).lower()
     url = f"https://search.emlakjet.com/search/v1/listing/satilik-konut/istanbul-{province_english}/{page}"
     async with session.get(url, ssl=ssl_context) as response:
@@ -47,8 +52,9 @@ async def fetch_listings(session, province, page):
             print(f"Province: {province}, Page {page}: Failed to collect records. Status code: {response.status}")
             return [], 0
 
-@backoff.on_exception(backoff.expo, aiohttp.ClientOSError, max_time=60)
+@backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=5, max_time=300)
 async def fetch_additional_info(session, listing_id):
+    """Fetch additional details for a specific listing."""
     try:
         url = f"https://api.emlakjet.com/e6t/v1/listing/{listing_id}/"
         async with session.get(url, ssl=ssl_context) as response:
@@ -66,11 +72,15 @@ async def fetch_additional_info(session, listing_id):
         return None, None
 
 async def main():
+    """Main scraping function."""
     all_records = []
-    async with aiohttp.ClientSession() as session:
+    connector = aiohttp.TCPConnector(limit=10)  # Limit simultaneous connections
+    timeout = aiohttp.ClientTimeout(total=60)   # Increase timeout
+    async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
         for province in provinces:
             page = 0
             records, maximumPage = await fetch_listings(session, province, page)
+            maximumPage = min(maximumPage, MAX_PAGES_PER_PROVINCE)  # Limit pages to scrape
             while page <= maximumPage:
                 if records:
                     tasks = [fetch_additional_info(session, record['id']) for record in records]
@@ -84,12 +94,13 @@ async def main():
                 page += 1
                 if page <= maximumPage:
                     records, _ = await fetch_listings(session, province, page)
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.5)  # Delay to throttle requests
 
     print(f"Total number of collected records: {len(all_records)}")
     return all_records
 
 def download_from_gcs(bucket_name, filename):
+    """Download a file from Google Cloud Storage."""
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(filename)
     if blob.exists():
@@ -97,12 +108,14 @@ def download_from_gcs(bucket_name, filename):
     return {}
 
 def upload_to_gcs(bucket_name, filename, data):
+    """Upload a file to Google Cloud Storage."""
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(filename)
     blob.upload_from_string(json.dumps(data, ensure_ascii=False, indent=4))
     print(f"Uploaded data to {bucket_name}/{filename}")
 
 def update_emlakjet_data(new_data):
+    """Update the property data in Google Cloud Storage."""
     today = datetime.now().strftime('%Y-%m-%d')
 
     # Download existing data from GCS
@@ -129,6 +142,7 @@ def update_emlakjet_data(new_data):
 SCRAPE_LAST_RUN_FILE = "scrape_last_run.txt"
 
 def get_last_run_time():
+    """Get the last run time from the local file."""
     if os.path.exists(SCRAPE_LAST_RUN_FILE):
         with open(SCRAPE_LAST_RUN_FILE, "r") as file:
             last_run_str = file.read().strip()
@@ -136,10 +150,12 @@ def get_last_run_time():
     return datetime.min
 
 def update_last_run_time():
+    """Update the last run time in the local file."""
     with open(SCRAPE_LAST_RUN_FILE, "w") as file:
         file.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 def run_scraper():
+    """Run the scraper if the last run was more than 24 hours ago."""
     last_run_time = get_last_run_time()
     if datetime.now() - last_run_time > timedelta(hours=24):
         print("Running scraper...")
@@ -151,3 +167,4 @@ def run_scraper():
 
 if __name__ == "__main__":
     run_scraper()
+    
