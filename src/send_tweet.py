@@ -33,6 +33,21 @@ def upload_to_gcs(bucket_name, filename, content):
     blob.upload_from_string(content, content_type="text/plain")
     print(f"Uploaded {filename} to bucket {bucket_name}.")
 
+def download_images(image_urls, max_images=4):
+    """Download images from URLs and save them locally."""
+    image_files = []
+    for i, url in enumerate(image_urls[:max_images]):  # Limit to 4 images (Twitter's limit)
+        filename = f"downloaded_image_{i+1}.jpg"
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            with open(filename, 'wb') as f:
+                f.write(response.content)
+            image_files.append(filename)
+        except Exception as e:
+            print(f"Error downloading {url}: {e}")
+    return image_files
+
 
 def load_top_urls():
     """Load the top URLs and their IDs from GCS."""
