@@ -34,15 +34,15 @@ def upload_media_v1(image_files):
 def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
     """Post a tweet with media using Twitter API v2, with retry logic."""
     retries = 0
+    media_ids = image_urls if image_urls else []  # Directly pass the image URLs if already hosted
+
     while retries <= max_retries:
         try:
-            if image_urls:
-                # Post the tweet with image URLs
+            if media_ids:
+                # Post the tweet with media
                 response = client_v2.create_tweet(
                     text=tweet_text,
-                    media={
-                        "media_ids": image_urls,  # Use the image URLs directly
-                    }
+                    media_ids=media_ids  # Use media_ids directly
                 )
             else:
                 # Post the tweet without media
@@ -66,4 +66,3 @@ def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
         except Exception as e:
             print(f"Unexpected error: {e}")
             break
-
