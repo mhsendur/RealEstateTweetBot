@@ -52,8 +52,6 @@ def upload_media_v1(image_urls):
 def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
     """Post a tweet with media using Twitter API v2, with retry logic."""
     retries = 0
-
-    # Upload images and get media IDs
     media_ids = upload_media_v1(image_urls) if image_urls else []
 
     while retries <= max_retries:
@@ -62,27 +60,30 @@ def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
                 # Post the tweet with media
                 response = client_v2.create_tweet(
                     text=tweet_text,
-                    media_ids=media_ids  # Pass valid media IDs
+                    media_ids=media_ids
                 )
             else:
                 # Post the tweet without media
                 response = client_v2.create_tweet(text=tweet_text)
 
             print(f"Tweet posted successfully: https://twitter.com/user/status/{response.data['id']}")
-            return  # Exit the retry loop after a successful post
+            return True  # Exit the retry loop after a successful post
+
         except tweepy.TooManyRequests as e:
             print(f"Rate limit reached: {e}")
             retries += 1
             if retries > max_retries:
                 print("Maximum retries reached. Aborting.")
-                break
+                return False
             print(f"Retrying in {retry_delay} seconds...")
             time.sleep(retry_delay)
+
         except tweepy.TweepyException as e:
             print(f"Error posting tweet: {e}")
             if hasattr(e, 'response') and e.response is not None:
                 print(f"Response content: {e.response.json()}")
-            break  # Non-rate limit errors won't be retried
+            return False  # Exit on non-rate limit errors
+
         except Exception as e:
             print(f"Unexpected error: {e}")
-            break
+            return False  # Exit on unexpected errors
