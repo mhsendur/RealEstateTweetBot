@@ -33,21 +33,6 @@ def upload_to_gcs(bucket_name, filename, content):
     blob.upload_from_string(content, content_type="text/plain")
     print(f"Uploaded {filename} to bucket {bucket_name}.")
 
-def download_images(image_urls, max_images=4):
-    """Download images from URLs and save them locally."""
-    image_files = []
-    for i, url in enumerate(image_urls[:max_images]):  # Limit to 4 images (Twitter's limit)
-        filename = f"downloaded_image_{i+1}.jpg"
-        try:
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
-            with open(filename, 'wb') as f:
-                f.write(response.content)
-            image_files.append(filename)
-        except Exception as e:
-            print(f"Error downloading {url}: {e}")
-    return image_files
-
 
 def load_top_urls():
     """Load the top URLs and their IDs from GCS."""
@@ -137,8 +122,8 @@ def process_random_listing(max_retries=3, retry_delay=60):
         location = listing.get("locationSummary", "N/A")
         description = listing.get("description", "No description available")
 
-        # Download images
-        image_files = download_images(listing.get("imagesFullPath", []))
+        # Extract image URLs from imagesFullPath
+        image_urls = listing.get("imagesFullPath", [])[:4]  # Use up to 4 images
 
         print(f"Processing Listing ID: {listing_id}, Title: {title}")
 
@@ -148,7 +133,7 @@ def process_random_listing(max_retries=3, retry_delay=60):
         # Generate the tweet text using OpenAI
         try:
             tweet_text = OpenAI_API.create_tweet_text(raw_data)
-            tweet_text += f"\n🔗 Link: {url}"  # Append the hardcoded link
+            tweet_text += f"\n🔗 Link: {url}"  # Append the link
         except Exception as e:
             print(f"Error generating tweet text for Listing ID {listing_id}: {e}")
             return
@@ -157,7 +142,7 @@ def process_random_listing(max_retries=3, retry_delay=60):
         retries = 0
         while retries <= max_retries:
             try:
-                Twitter_API.send_tweet_v2(tweet_text, image_files)
+                Twitter_API.send_tweet_v2(tweet_text, image_urls)
                 print("Tweet posted successfully!")
                 break  # Exit loop on success
             except Twitter_API.TooManyRequests as e:
