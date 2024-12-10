@@ -38,6 +38,8 @@ def upload_media_v1(image_urls):
             
             # Upload the image to Twitter
             media = api_v1.media_upload(filename=temp_filename)
+            if not str(media.media_id).isdigit():
+                raise ValueError(f"Invalid media ID: {media.media_id}")
             media_ids.append(media.media_id)
             print(f"Uploaded image from {url}, media ID: {media.media_id}")
         except Exception as e:
@@ -48,6 +50,7 @@ def upload_media_v1(image_urls):
                 os.remove(temp_filename)
                 print(f"Deleted temporary file: {temp_filename}")
     return media_ids
+
 
 def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
     """Post a tweet with media using Twitter API v2, with retry logic."""
