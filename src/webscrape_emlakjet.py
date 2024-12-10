@@ -9,7 +9,7 @@ from google.cloud import storage
 
 # Define Google Cloud Storage settings
 GCS_BUCKET_NAME = "real-estate-bot-bucket"
-JSON_FILE_NAME = "istanbul_emlakjet_all_records.json"
+JSON_FILE_NAME = "istanbul_emlakjet_all_records_updated.json"
 
 # Initialize Google Cloud Storage client
 storage_client = storage.Client()
