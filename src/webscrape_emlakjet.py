@@ -121,23 +121,30 @@ def update_emlakjet_data(new_data):
     # Download existing data from GCS
     existing_data = download_from_gcs(GCS_BUCKET_NAME, JSON_FILE_NAME)
 
-    # Process new data to update existing ads and add new ads
-    for ad in new_data:
-        ad_id = ad['id']
+    # Convert existing data to a dictionary (if it's a list)
+    if isinstance(existing_data, list):
+        existing_data = {ad['id']: ad for ad in existing_data}
+
+    # Convert new data to a dictionary for easy merging
+    new_data_dict = {ad['id']: ad for ad in new_data}
+
+    # Update existing ads and add new ads
+    for ad_id, ad in new_data_dict.items():
         ad['ilanda_kalis_suresi'] = (datetime.now() - datetime.strptime(ad['createdAt'], '%Y-%m-%dT%H:%M:%SZ')).days
-        if ad_id in existing_data:
-            existing_data[ad_id] = ad
-        else:
-            existing_data[ad_id] = ad
+        existing_data[ad_id] = ad
 
     # Remove inactive listings
-    new_ad_ids = {ad['id'] for ad in new_data}
-    inactive_ads = [ad_id for ad_id in existing_data if ad_id not in new_ad_ids]
-    for ad_id in inactive_ads:
-        existing_data[ad_id]['ilan_bitis'] = today
+    new_ad_ids = set(new_data_dict.keys())
+    for ad_id in list(existing_data.keys()):
+        if ad_id not in new_ad_ids:
+            existing_data[ad_id]['ilan_bitis'] = today
+
+    # Convert back to a list before uploading
+    updated_data_list = list(existing_data.values())
 
     # Upload updated data to GCS
-    upload_to_gcs(GCS_BUCKET_NAME, JSON_FILE_NAME, existing_data)
+    upload_to_gcs(GCS_BUCKET_NAME, JSON_FILE_NAME, updated_data_list)
+
 
 SCRAPE_LAST_RUN_FILE = "scrape_last_run.txt"
 
