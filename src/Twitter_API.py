@@ -1,6 +1,7 @@
 import tweepy
 import credentials
 import time
+import os
 
 # Initialize v1.1 API client for media upload
 auth = tweepy.OAuth1UserHandler(
@@ -19,22 +20,40 @@ client_v2 = tweepy.Client(
     access_token_secret=credentials.access_token_secret,
 )
 
-def upload_media_v1(image_files):
+def upload_media_v1(image_urls):
     """Upload media using Twitter API v1.1 and return media IDs."""
     media_ids = []
-    for image_file in image_files[:4]:  # Twitter allows up to 4 images per tweet
+    for i, url in enumerate(image_urls[:4]):  # Limit to 4 images (Twitter's limit)
+        temp_filename = f"temp_image_{i}.jpg"
         try:
-            media = api_v1.media_upload(image_file)
+            # Download the image from the URL
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            
+            # Save the image temporarily
+            with open(temp_filename, 'wb') as temp_file:
+                for chunk in response.iter_content(1024):
+                    temp_file.write(chunk)
+            
+            # Upload the image to Twitter
+            media = api_v1.media_upload(filename=temp_filename)
             media_ids.append(media.media_id)
-            print(f"Uploaded {image_file}, media ID: {media.media_id_string}")
+            print(f"Uploaded image from {url}, media ID: {media.media_id}")
         except Exception as e:
-            print(f"Error uploading {image_file}: {e}")
+            print(f"Error uploading media from {url}: {e}")
+        finally:
+            # Clean up: Remove the temporary file
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
+                print(f"Deleted temporary file: {temp_filename}")
     return media_ids
 
 def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
     """Post a tweet with media using Twitter API v2, with retry logic."""
     retries = 0
-    media_ids = image_urls if image_urls else []  # Directly pass the image URLs if already hosted
+
+    # Upload images and get media IDs
+    media_ids = upload_media_v1(image_urls) if image_urls else []
 
     while retries <= max_retries:
         try:
@@ -42,7 +61,7 @@ def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
                 # Post the tweet with media
                 response = client_v2.create_tweet(
                     text=tweet_text,
-                    media_ids=media_ids  # Use media_ids directly
+                    media_ids=media_ids  # Pass valid media IDs
                 )
             else:
                 # Post the tweet without media
