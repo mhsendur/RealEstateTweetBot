@@ -5,11 +5,14 @@ import random
 import requests
 import time
 from google.cloud import storage
+import os
 
 # Google Cloud Storage Configuration
 GCS_BUCKET_NAME = "real-estate-bot-bucket"
 TOP_URLS_FILE = "top_listings_ids_and_urls.txt"
 LISTINGS_JSON_FILE = "istanbul_emlakjet_all_records_updated.json"
+
+client_v2 = Twitter_API.client_v2
 
 # Initialize the GCS client
 storage_client = storage.Client()
