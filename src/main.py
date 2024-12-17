@@ -6,7 +6,7 @@ import time
 import os
 
 # Define Istanbul time-based tweet schedule (GMT+3)
-TWEET_TIMES = ["06:30", "09:30", "12:30", "15:15", "15:20"]
+TWEET_TIMES = ["06:30", "09:30", "12:30", "18:25", "18:29"]
 
 SCRAPE_LAST_RUN_FILE = "scrape_last_run.txt"
 
