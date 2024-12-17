@@ -5,13 +5,18 @@ from datetime import datetime, timedelta
 import time
 
 # Define Istanbul time-based tweet schedule (GMT+3)
-TWEET_TIMES = ["06:30", "09:30", "12:30", "14:56", "15:10"]
+TWEET_TIMES = ["06:30", "09:30", "12:30", "13:50", "14:00"]
 
 def run_daily_workflow():
     print("Starting daily scraping and modeling workflow...")
-    webscrape_emlakjet.run_scraper()
-    modeling.run_modeling()
-    print("Scraping and modeling completed for the day.")
+    # Run scraper and check if new data was collected
+    scraper_status = webscrape_emlakjet.run_scraper()
+    if scraper_status:  # Only run modeling if scraping occurred
+        print("New data collected. Running modeling...")
+        modeling.run_modeling()
+        print("Scraping and modeling completed for the day.")
+    else:
+        print("Scraping skipped for today. Skipping modeling as well.")
 
 def post_scheduled_tweets():
     today = datetime.now().strftime("%Y-%m-%d")
