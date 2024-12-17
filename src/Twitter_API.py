@@ -2,6 +2,11 @@ import tweepy
 import time
 import credentials
 
+print(f"Loaded Credentials:")
+print(f"Consumer Key: {api_key[:5]}*****")
+print(f"Consumer Secret: {api_secret[:5]}*****")
+print(f"Access Token: {access_token[:5]}*****")
+print(f"Access Token Secret: {access_token_secret[:5]}*****")
 
 def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
     """Post a tweet with media using Twitter API v2, with retry logic."""
