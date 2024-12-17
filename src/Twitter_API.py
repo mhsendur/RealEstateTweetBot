@@ -41,7 +41,7 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=3, retry_delay=5):
             # Validate response
             if response and response.data and "id" in response.data:
                 tweet_id = response.data['id']
-                tweet_url = f"https://twitter.com/your_username/status/{tweet_id}"
+                tweet_url = f"https://twitter.com//_RealEstateBot/status/{tweet_id}"
                 print(f"Tweet successfully posted! URL: {tweet_url}")
                 print(f"Full Response: {response.data}")
                 return tweet_url  # Return tweet URL on success
