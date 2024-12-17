@@ -4,7 +4,7 @@ import credentials
 
 
 def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
-    """Post a tweet with media using Twitter API v2, with retry logic."""
+    """1Post a tweet with media using Twitter API v2, with retry logic."""
     retries = 0
     media_ids = image_urls if image_urls else []  # Directly pass the image URLs if already hosted
 
