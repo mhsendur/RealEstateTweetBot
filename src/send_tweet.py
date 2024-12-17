@@ -137,9 +137,7 @@ def process_random_listing(max_retries=3, retry_delay=60):
         location = listing.get("locationSummary", "N/A")
         description = listing.get("description", "No description available")
         images = listing.get("imagesFullPath", [])
-        image_files = download_images(images)
-
-
+        
         print(f"Processing Listing ID: {listing_id}, Title: {title}")
 
         # Format raw data for the tweet
@@ -153,16 +151,35 @@ def process_random_listing(max_retries=3, retry_delay=60):
             print(f"Error generating tweet text for Listing ID {listing_id}: {e}")
             return
 
+        # Download up to 4 images
+        image_files = download_images(images)
+
+        # Post the tweet using Twitter API
+        try:
+            print("Sending the tweet...")
+            Twitter_API.send_tweet_v2(tweet_text, image_files)
+            print("Tweet successfully sent.")
+        except Exception as e:
+            print(f"Error posting tweet for Listing ID {listing_id}: {e}")
+            return
+
+        # Cleanup downloaded images
+        for image_file in image_files:
+            try:
+                if os.path.exists(image_file):
+                    os.remove(image_file)
+                    print(f"Deleted temporary file: {image_file}")
+            except Exception as e:
+                print(f"Error deleting {image_file}: {e}")
 
         # Remove the selected listing from the list
         top_urls.remove(selected_listing)
-
-        # Save the updated list back to GCS
         save_top_urls(top_urls)
-
         print(f"Successfully processed and tweeted Listing ID {listing_id}.")
+
     except Exception as e:
         print(f"Error processing Listing ID {listing_id}: {e}")
+
 
 
 def send_tweet():
