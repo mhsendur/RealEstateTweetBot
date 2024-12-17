@@ -32,15 +32,17 @@ def upload_images_to_twitter(image_files):
             print(f"Failed to upload {image_file}: {e}")
     return media_ids
 
+import tweepy
+import time
+import datetime
 
-def send_tweet_v2(tweet_text, image_files=None, max_retries=3, retry_delay=5):
-    """Post a tweet with media using Twitter API v2."""
+def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
+    """Post a tweet with media using Twitter API v2 with rate limit monitoring."""
     retries = 0
-    media_ids = []
+    backoff_time = 5  # Initial backoff time in seconds
 
-    # Upload media if images are provided
-    if image_files:
-        media_ids = upload_images_to_twitter(image_files)
+    # Upload images if provided
+    media_ids = upload_images_to_twitter(image_files) if image_files else []
 
     while retries <= max_retries:
         try:
@@ -57,23 +59,25 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=3, retry_delay=5):
                 return tweet_id
             else:
                 print("Failed to post tweet. Invalid response.")
+                return None
+
         except tweepy.TooManyRequests as e:
-            print(f"Rate limit reached: {e}. Retrying in {retry_delay} seconds...")
-            time.sleep(retry_delay)
-        except tweepy.Forbidden as e:
-            print(f"Forbidden error: {e}")
-            if media_ids:
-                print("Retrying tweet without media...")
-                media_ids = []  # Remove media IDs and retry without images
-                retries = 0  # Reset retries
+            print(f"Rate limit reached. Retrying after checking reset time...")
+            if e.response and "x-rate-limit-reset" in e.response.headers:
+                reset_time = int(e.response.headers['x-rate-limit-reset'])
+                reset_dt = datetime.datetime.fromtimestamp(reset_time)
+                wait_time = (reset_dt - datetime.datetime.now()).total_seconds()
+                print(f"Rate limit resets at: {reset_dt}. Waiting for {wait_time:.2f} seconds...")
+                time.sleep(wait_time + 1)  # Add 1 second buffer
             else:
-                print("Tweet failed without media. Aborting.")
-                break
+                print("No rate limit reset time found. Retrying with exponential backoff.")
+                time.sleep(backoff_time)
+                backoff_time *= 2
+            retries += 1
+
         except Exception as e:
             print(f"Unexpected error: {e}")
             break
-
-        retries += 1
 
     print("Failed to post tweet after all retries.")
     return None
