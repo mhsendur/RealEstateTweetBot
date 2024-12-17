@@ -27,7 +27,7 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=3, retry_delay=5):
 
     while retries <= max_retries:
         try:
-            # Attempt to post a tweet with media if media_ids exist
+            # Attempt to post a tweet
             if media_ids:
                 print("Posting tweet with media...")
                 response = client_v2.create_tweet(
@@ -38,22 +38,26 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=3, retry_delay=5):
                 print("Posting tweet without media...")
                 response = client_v2.create_tweet(text=tweet_text)
 
-            # Verify if response contains a valid tweet ID
+            # Validate response
             if response and response.data and "id" in response.data:
-                tweet_url = f"https://twitter.com/user/status/{response.data['id']}"
-                print(f"Tweet posted successfully! URL: {tweet_url}")
-                tweet_posted = True
-                return response  # Exit after successful tweet
+                tweet_id = response.data['id']
+                tweet_url = f"https://twitter.com/your_username/status/{tweet_id}"
+                print(f"Tweet successfully posted! URL: {tweet_url}")
+                print(f"Full Response: {response.data}")
+                return tweet_url  # Return tweet URL on success
+            else:
+                print("Failed to get valid tweet ID in the response.")
+                return None
 
         except tweepy.Forbidden as e:
             print(f"Tweet failed with Forbidden error: {e}")
-            if media_ids:  # Retry without media
+            if media_ids:
                 print("Retrying tweet without media...")
                 media_ids = []  # Clear media IDs
-                retries = 0  # Reset retries when switching to text-only tweet
+                retries = 0  # Reset retries for no-media attempt
             else:
-                print("Forbidden error occurred without media. Aborting.")
-                break  # Stop retries if Forbidden persists without media
+                print("Forbidden error without media. Aborting.")
+                break  # Stop retries if Forbidden persists
 
         except tweepy.TooManyRequests as e:
             print(f"Rate limit reached. Retrying after {retry_delay} seconds...")
@@ -66,12 +70,9 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=3, retry_delay=5):
 
         except Exception as e:
             print(f"Unexpected error: {e}")
-            break  # Catch-all for unexpected errors
+            break
 
-        # Increment retries if tweet not yet posted
         retries += 1
 
-    # Log failure if tweet still not posted
-    if not tweet_posted:
-        print("Failed to post tweet after all retries.")
-    return None  # Return None if tweet fails entirely
+    print("Failed to post tweet after all retries.")
+    return None  # Return None if tweet fails
