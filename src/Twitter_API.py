@@ -1,92 +1,80 @@
 import tweepy
 import credentials
 import time
-import os
-import requests
 
-# Initialize v1.1 API client for media upload
-auth = tweepy.OAuth1UserHandler(
-    consumer_key=credentials.consumer_key,
-    consumer_secret=credentials.consumer_secret,
-    access_token=credentials.access_token,
-    access_token_secret=credentials.access_token_secret,
-)
-api_v1 = tweepy.API(auth)
+# Twitter API credentials
+api_key = credentials.consumer_key
+api_secret = credentials.consumer_secret
+access_token = credentials.access_token
+access_token_secret = credentials.access_token_secret
 
-# Initialize v2 API client for creating tweets
-client_v2 = tweepy.Client(
-    consumer_key=credentials.consumer_key,
-    consumer_secret=credentials.consumer_secret,
-    access_token=credentials.access_token,
-    access_token_secret=credentials.access_token_secret,
-)
+# Function to get Twitter API v1.1 connection
+def get_twitter_conn_v1(api_key, api_secret, access_token, access_token_secret) -> tweepy.API:
+    auth = tweepy.OAuth1UserHandler(api_key, api_secret)
+    auth.set_access_token(access_token, access_token_secret)
+    return tweepy.API(auth)
 
-def upload_media_v1(image_urls):
+# Function to get Twitter API v2 connection
+def get_twitter_conn_v2(api_key, api_secret, access_token, access_token_secret) -> tweepy.Client:
+    return tweepy.Client(
+        consumer_key=api_key,
+        consumer_secret=api_secret,
+        access_token=access_token,
+        access_token_secret=access_token_secret,
+    )
+
+# Initialize connections
+client_v1 = get_twitter_conn_v1(api_key, api_secret, access_token, access_token_secret)
+client_v2 = get_twitter_conn_v2(api_key, api_secret, access_token, access_token_secret)
+
+
+def upload_media_v1(image_files):
     """Upload media using Twitter API v1.1 and return media IDs."""
     media_ids = []
-    for i, url in enumerate(image_urls[:4]):  # Limit to 4 images (Twitter's limit)
-        temp_filename = f"temp_image_{i}.jpg"
+    for image_file in image_files[:4]:  # Twitter allows up to 4 images per tweet
         try:
-            # Download the image from the URL
-            response = requests.get(url, stream=True)
-            response.raise_for_status()
-            
-            # Save the image temporarily
-            with open(temp_filename, 'wb') as temp_file:
-                for chunk in response.iter_content(1024):
-                    temp_file.write(chunk)
-            
-            # Upload the image to Twitter
-            media = api_v1.media_upload(filename=temp_filename)
-            if not str(media.media_id).isdigit():
-                raise ValueError(f"Invalid media ID: {media.media_id}")
-            media_ids.append(media.media_id)
-            print(f"Uploaded image from {url}, media ID: {media.media_id}")
+            print(f"Uploading {image_file}...")
+            media = client_v1.media_upload(image_file)
+            media_ids.append(str(media.media_id))
+            print(f"Uploaded {image_file}, Media ID: {media.media_id}")
         except Exception as e:
-            print(f"Error uploading media from {url}: {e}")
-        finally:
-            # Clean up: Remove the temporary file
-            if os.path.exists(temp_filename):
-                os.remove(temp_filename)
-                print(f"Deleted temporary file: {temp_filename}")
+            print(f"Error uploading {image_file}: {e}")
     return media_ids
 
 
-def send_tweet_v2(tweet_text, image_urls=None, max_retries=3, retry_delay=60):
-    """Post a tweet with media using Twitter API v2, with retry logic."""
-    retries = 0
-    media_ids = upload_media_v1(image_urls) if image_urls else []
+def send_tweet_v2(tweet_text, image_files=None, max_retries=3, retry_delay=5):
+    """Post a tweet with up to 4 media files using Twitter API v2."""
+    media_ids = upload_media_v1(image_files) if image_files else []
+    if media_ids:
+        print("Waiting for media processing to finalize...")
+        time.sleep(5)  # Ensure media is processed
 
+    retries = 0
     while retries <= max_retries:
         try:
             if media_ids:
-                # Post the tweet with media
                 response = client_v2.create_tweet(
                     text=tweet_text,
                     media_ids=media_ids
                 )
             else:
-                # Post the tweet without media
                 response = client_v2.create_tweet(text=tweet_text)
 
-            print(f"Tweet posted successfully: https://twitter.com/user/status/{response.data['id']}")
-            return True  # Exit the retry loop after a successful post
-
+            print(f"Tweet posted successfully! URL: https://twitter.com/user/status/{response.data['id']}")
+            return response
+        except tweepy.Forbidden as e:
+            print(f"Tweet with media failed: {e}")
+            if media_ids:  # Retry without media
+                print("Retrying tweet without media...")
+                media_ids = []  # Clear media IDs
+                retries = 0  # Reset retries for no-media attempt
+            else:
+                print("Forbidden error without media. Aborting.")
+                break
         except tweepy.TooManyRequests as e:
             print(f"Rate limit reached: {e}")
             retries += 1
-            if retries > max_retries:
-                print("Maximum retries reached. Aborting.")
-                return False
-            print(f"Retrying in {retry_delay} seconds...")
             time.sleep(retry_delay)
-
         except tweepy.TweepyException as e:
             print(f"Error posting tweet: {e}")
-            if hasattr(e, 'response') and e.response is not None:
-                print(f"Response content: {e.response.json()}")
-            return False  # Exit on non-rate limit errors
-
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-            return False  # Exit on unexpected errors
+            break
