@@ -56,40 +56,63 @@ def upload_media_v1(image_files):
             print(f"Error uploading {image_file}: {e}")
     return media_ids
 
-
 def send_tweet_v2(tweet_text, image_files=None, max_retries=3, retry_delay=5):
     """Post a tweet with up to 4 media files using Twitter API v2."""
-    media_ids = upload_media_v1(image_files) if image_files else []
-    retries = 0
+    tweet_posted = False  # Flag to confirm successful posting
+    retries = 0  # Retry counter
 
-    while retries <= max_retries:
+    # Step 1: Try to upload media if available
+    media_ids = []
+    if image_files:
+        print("Uploading media...")
+        media_ids = upload_media_v1(image_files)  # Upload media and get media IDs
+        print(f"Media IDs: {media_ids}")
+
+    while retries <= max_retries and not tweet_posted:
         try:
+            # Step 2: Post the tweet with or without media
             if media_ids:
-                print("Posting tweet with media...")
+                print("Attempting to post tweet with media...")
                 response = client_v2.create_tweet(text=tweet_text, media_ids=media_ids)
             else:
-                print("Posting tweet without media...")
+                print("Attempting to post text-only tweet...")
                 response = client_v2.create_tweet(text=tweet_text)
 
-            # Verify the response
+            # Step 3: Validate the response
             if response and "id" in response.data:
-                tweet_id = response.data["id"]
-                print(f"Tweet posted successfully! URL: https://twitter.com/user/status/{tweet_id}")
-                return response  # Exit if successful
+                tweet_url = f"https://twitter.com/user/status/{response.data['id']}"
+                print(f"Tweet posted successfully: {tweet_url}")
+                tweet_posted = True  # Mark as successfully posted
+                return response  # Exit function after successful post
             else:
-                print("Response did not contain a valid tweet ID. Retrying...")
+                print("Failed to get a valid tweet ID from the response. Retrying...")
 
         except tweepy.Forbidden as e:
-            print(f"Forbidden error: {e}. Retrying without media...")
-            media_ids = []  # Clear media for retry
-            retries = 0  # Reset retry count for text-only tweets
+            print(f"Forbidden error: {e}")
+            if media_ids:
+                print("Retrying tweet without media...")
+                media_ids = []  # Clear media IDs to retry without images
+                retries = 0  # Reset retries for text-only tweet
+            else:
+                print("Forbidden error without media. Aborting.")
+                break  # Stop retries if forbidden persists without media
+
         except tweepy.TooManyRequests as e:
-            print(f"Rate limit reached. Waiting for {retry_delay} seconds...")
+            print(f"Rate limit reached. Retrying after {retry_delay} seconds...")
             time.sleep(retry_delay)
+            retries += 1
+
         except tweepy.TweepyException as e:
             print(f"Error posting tweet: {e}")
-            break  # Stop on other errors
+            break  # Stop on unexpected exceptions
+
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            break
+
         retries += 1
 
-    print("Failed to post tweet after all retries.")
+    # Step 4: Log final failure if tweet still not posted
+    if not tweet_posted:
+        print("Failed to post tweet after all retries.")
     return None
