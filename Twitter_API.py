@@ -8,6 +8,13 @@ api_secret = credentials.consumer_secret
 access_token = credentials.access_token
 access_token_secret = credentials.access_token_secret
 
+print(f"Loaded Credentials:")
+print(f"Consumer Key: {api_key[:5]}*****")
+print(f"Consumer Secret: {api_secret[:5]}*****")
+print(f"Access Token: {access_token[:5]}*****")
+print(f"Access Token Secret: {access_token_secret[:5]}*****")
+
+
 # Function to get Twitter API v1.1 connection
 def get_twitter_conn_v1(api_key, api_secret, access_token, access_token_secret) -> tweepy.API:
     auth = tweepy.OAuth1UserHandler(api_key, api_secret)
