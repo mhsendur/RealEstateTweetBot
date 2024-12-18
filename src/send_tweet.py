@@ -46,11 +46,17 @@ def download_images(image_urls, max_images=4):
             response.raise_for_status()
             with open(filename, 'wb') as f:
                 f.write(response.content)
+            # Check file size
+            if os.path.getsize(filename) > 5 * 1024 * 1024:  # 5 MB
+                print(f"Skipping {filename}: exceeds 5 MB.")
+                os.remove(filename)
+                continue
             image_files.append(filename)
             print(f"Downloaded: {filename}")
         except Exception as e:
             print(f"Error downloading {url}: {e}")
     return image_files
+
 
 def load_top_urls():
     """Load the top URLs and their IDs from GCS."""
