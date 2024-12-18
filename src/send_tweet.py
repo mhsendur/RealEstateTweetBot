@@ -118,9 +118,23 @@ def find_listing_by_id(listings, listing_id):
             return listing
     return None
 
+POSTED_IDS_FILE = "posted_ids.txt"
+
+def load_posted_ids():
+    """Load the IDs of already posted listings from a file."""
+    if os.path.exists(POSTED_IDS_FILE):
+        with open(POSTED_IDS_FILE, "r") as file:
+            return set(line.strip() for line in file)
+    return set()
+
+def save_posted_id(listing_id):
+    """Save a posted listing ID to the file."""
+    with open(POSTED_IDS_FILE, "a") as file:
+        file.write(f"{listing_id}\n")
 
 def process_random_listing(max_retries=3, retry_delay=60):
-    """Process and tweet a random listing, then remove it from the list with retry logic."""
+    posted_ids = load_posted_ids()
+
     top_urls = load_top_urls()
     listings = load_listings_from_json()
 
@@ -131,7 +145,11 @@ def process_random_listing(max_retries=3, retry_delay=60):
     # Randomly select a listing from the list
     selected_listing = random.choice(top_urls)
     listing_id = selected_listing["id"]
-    url = f"{selected_listing['url']}"
+
+    # Skip if this listing has already been tweeted
+    if listing_id in posted_ids:
+        print(f"Listing ID {listing_id} has already been tweeted. Skipping...")
+        return
 
     try:
         # Find the corresponding listing in the JSON data
@@ -146,48 +164,35 @@ def process_random_listing(max_retries=3, retry_delay=60):
         location = listing.get("locationSummary", "N/A")
         description = listing.get("description", "No description available")
         images = listing.get("imagesFullPath", [])
-        
+
         print(f"Processing Listing ID: {listing_id}, Title: {title}")
 
-        # Format raw data for the tweet
+        # Generate tweet text
         raw_data = f"Başlık: {title}\nFiyat: {price} TL\nKonum: {location}\nAçıklama: {description}"
+        tweet_text = OpenAI_API.create_tweet_text(raw_data)
+        tweet_text += f"\n🔗 Link: {selected_listing['url']}"
 
-        # Generate the tweet text using OpenAI
-        try:
-            tweet_text = OpenAI_API.create_tweet_text(raw_data)
-            tweet_text += f"\n🔗 Link: {url}"  # Append the link
-        except Exception as e:
-            print(f"Error generating tweet text for Listing ID {listing_id}: {e}")
-            return
-
-        # Download up to 4 images
+        # Download images
         image_files = download_images(images)
 
-        # Post the tweet using Twitter API
+        # Post the tweet
         try:
             print("Sending the tweet...")
             Twitter_API.send_tweet_v2(tweet_text, image_files)
             print("Tweet successfully sent.")
+            save_posted_id(listing_id)  # Mark as posted
         except Exception as e:
             print(f"Error posting tweet for Listing ID {listing_id}: {e}")
-            return
-
-        # Cleanup downloaded images
-        for image_file in image_files:
-            try:
+        finally:
+            # Cleanup downloaded images
+            for image_file in image_files:
                 if os.path.exists(image_file):
                     os.remove(image_file)
                     print(f"Deleted temporary file: {image_file}")
-            except Exception as e:
-                print(f"Error deleting {image_file}: {e}")
-
-        # Remove the selected listing from the list
-        top_urls.remove(selected_listing)
-        save_top_urls(top_urls)
-        print(f"Successfully processed and tweeted Listing ID {listing_id}.")
 
     except Exception as e:
         print(f"Error processing Listing ID {listing_id}: {e}")
+
 
 
 
