@@ -23,7 +23,7 @@ def update_last_run_time():
     with open(SCRAPE_LAST_RUN_FILE, "w") as file:
         file.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         
-def run_daily_workflow():
+def run_daily_workflow(skip_initial_wait=False):
     """Run scraping and modeling workflow at 2 AM."""
     now = datetime.now()
     target_time = datetime(now.year, now.month, now.day, 2, 0)  # 2:00 AM today
@@ -32,10 +32,13 @@ def run_daily_workflow():
     if now > target_time:
         target_time += timedelta(days=1)
 
-    # Calculate wait time
-    time_to_wait = (target_time - now).total_seconds()
-    print(f"Waiting until 2:00 AM to start scraping and modeling...")
-    time.sleep(time_to_wait)
+    if skip_initial_wait:
+        print("Skipping initial wait for web scraping and modeling.")
+    else:
+        # Calculate wait time
+        time_to_wait = (target_time - now).total_seconds()
+        print(f"Waiting until 2:00 AM to start scraping and modeling...")
+        time.sleep(time_to_wait)
 
     # Run scraping and modeling
     print("Starting daily scraping and modeling workflow...")
@@ -43,6 +46,7 @@ def run_daily_workflow():
     modeling.run_modeling()
     update_last_run_time()
     print("Scraping and modeling completed for the day.")
+
 
 
 def post_scheduled_tweets():
@@ -73,14 +77,16 @@ def post_scheduled_tweets():
 def main():
     # Run scraping and modeling once per day at 2 AM
     print("Starting the bot...")
+    first_run = True  # Track if this is the first run
     while True:
         now = datetime.now()
-
-        # Ensure scraping and modeling runs at 2 AM daily
         last_run = get_last_run_time()
-        if (now - last_run) >= timedelta(hours=24):
-            run_daily_workflow()
-        
+
+        # Check if scraping and modeling were done today or skip initial wait on first run
+        if first_run or (now - last_run) >= timedelta(hours=24):
+            run_daily_workflow(skip_initial_wait=first_run)
+            first_run = False  # Ensure skip only happens once
+
         # Start posting tweets throughout the day
         post_scheduled_tweets()
 
