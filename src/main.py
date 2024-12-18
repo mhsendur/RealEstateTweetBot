@@ -22,27 +22,23 @@ def update_last_run_time():
     """Update the last run time."""
     with open(SCRAPE_LAST_RUN_FILE, "w") as file:
         file.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
+        
 def run_daily_workflow():
-    """Run scraping and modeling workflow at 2 AM."""
+    """Run scraping and modeling workflow if 24 hours have passed since the last run."""
     now = datetime.now()
-    target_time = datetime(now.year, now.month, now.day, 2, 0)  # 2:00 AM today
+    last_run = get_last_run_time()
 
-    # If already past 2 AM, schedule for next day
-    if now > target_time:
-        target_time += timedelta(days=1)
+    # Check if 24 hours have passed since the last run
+    if (now - last_run) < timedelta(hours=24):
+        print(f"Skipping scraping and modeling. Last run was at {last_run}.")
+        return
 
-    # Calculate wait time
-    time_to_wait = (target_time - now).total_seconds()
-    print(f"Waiting until 2:00 AM to start scraping and modeling...")
-    time.sleep(time_to_wait)
-
-    # Run scraping and modeling
     print("Starting daily scraping and modeling workflow...")
     webscrape_emlakjet.run_scraper()
     modeling.run_modeling()
     update_last_run_time()
     print("Scraping and modeling completed for the day.")
+
 
 def post_scheduled_tweets():
     """Post tweets at scheduled times every day."""
