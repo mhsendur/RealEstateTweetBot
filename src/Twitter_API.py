@@ -42,7 +42,6 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
 
     while retries <= max_retries:
         try:
-            # Attempt to post with media
             if media_ids:
                 print("Attempting to post tweet with media...")
                 response = client_v2.create_tweet(text=tweet_text, media_ids=media_ids)
@@ -50,17 +49,16 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
                 print("Attempting to post tweet without media...")
                 response = client_v2.create_tweet(text=tweet_text)
 
-            # Check if the tweet was successfully posted
             if response and "data" in response and "id" in response.data:
                 tweet_id = response.data['id']
                 print(f"Tweet posted successfully! URL: https://twitter.com/user/status/{tweet_id}")
-                return tweet_id  # Exit after successful post
+                return tweet_id
 
         except tweepy.Forbidden as e:
             print(f"Forbidden error: {e}")
             if media_ids:
-                print("Tweet with media failed. Skipping retry without media.")
-                break  # Do not retry without media; exit
+                print("Retrying without media...")
+                media_ids = []  # Clear media IDs for retry
             else:
                 print("Forbidden error persists without media. Aborting.")
                 break
@@ -70,10 +68,10 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
             time.sleep(backoff_time)
             backoff_time *= 2
             retries += 1
-
         except Exception as e:
             print(f"Unexpected error: {e}")
             break
 
     print("Failed to post tweet after all retries.")
     return None
+
