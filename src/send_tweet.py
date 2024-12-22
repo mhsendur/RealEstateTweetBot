@@ -133,8 +133,11 @@ def save_posted_id(listing_id):
         file.write(f"{listing_id}\n")
 
 def process_random_listing(max_retries=3, retry_delay=60):
+    """Process and tweet a random listing, ensuring no duplicates."""
+    # Load previously posted IDs
     posted_ids = load_posted_ids()
 
+    # Load top URLs and listings
     top_urls = load_top_urls()
     listings = load_listings_from_json()
 
@@ -142,7 +145,7 @@ def process_random_listing(max_retries=3, retry_delay=60):
         print("No listings found in the file. Exiting...")
         return
 
-    # Randomly select a listing from the list
+    # Randomly select a listing
     selected_listing = random.choice(top_urls)
     listing_id = selected_listing["id"]
 
@@ -176,20 +179,33 @@ def process_random_listing(max_retries=3, retry_delay=60):
         image_files = download_images(images)
 
         # Post the tweet
+        success = False
         try:
-            print("Sending the tweet...")
-            tweet_id = Twitter_API.send_tweet_v2(tweet_text, image_files)
-            if tweet_id:
-                print("Tweet successfully sent.")
+            print("Sending the tweet with media...")
+            response = Twitter_API.send_tweet_v2(tweet_text, image_files)
+            if response:  # If response is valid, assume the tweet was posted
+                print("Tweet successfully sent with media.")
                 save_posted_id(listing_id)  # Mark as posted
+                success = True
         except Exception as e:
-            print(f"Error posting tweet for Listing ID {listing_id}: {e}")
-        finally:
-            # Cleanup downloaded images
-            for image_file in image_files:
-                if os.path.exists(image_file):
-                    os.remove(image_file)
-                    print(f"Deleted temporary file: {image_file}")
+            print(f"Error posting tweet with media for Listing ID {listing_id}: {e}")
+
+        # Fallback for duplicate content
+        if not success and listing_id not in posted_ids:
+            print("Retrying without media...")
+            try:
+                response = Twitter_API.send_tweet_v2(tweet_text)
+                if response:
+                    print("Tweet successfully sent without media.")
+                    save_posted_id(listing_id)
+            except Exception as e:
+                print(f"Error posting fallback tweet without media for Listing ID {listing_id}: {e}")
+
+        # Cleanup downloaded images
+        for image_file in image_files:
+            if os.path.exists(image_file):
+                os.remove(image_file)
+                print(f"Deleted temporary file: {image_file}")
 
     except Exception as e:
         print(f"Error processing Listing ID {listing_id}: {e}")
