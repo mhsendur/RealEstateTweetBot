@@ -178,9 +178,10 @@ def process_random_listing(max_retries=3, retry_delay=60):
         # Post the tweet
         try:
             print("Sending the tweet...")
-            Twitter_API.send_tweet_v2(tweet_text, image_files)
-            print("Tweet successfully sent.")
-            save_posted_id(listing_id)  # Mark as posted
+            tweet_id = Twitter_API.send_tweet_v2(tweet_text, image_files)
+            if tweet_id:
+                print("Tweet successfully sent.")
+                save_posted_id(listing_id)  # Mark as posted
         except Exception as e:
             print(f"Error posting tweet for Listing ID {listing_id}: {e}")
         finally:
@@ -192,7 +193,6 @@ def process_random_listing(max_retries=3, retry_delay=60):
 
     except Exception as e:
         print(f"Error processing Listing ID {listing_id}: {e}")
-
 
 
 
