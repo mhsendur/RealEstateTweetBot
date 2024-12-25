@@ -24,7 +24,7 @@ def update_last_run_time():
 
 def generate_random_post_times():
     """Generate 5 random post times for the day with at least 3 hours gap."""
-    base_times = [6, 9, 12, 15, 18]  # Base hours (around 6:30, 9:30, etc.)
+    base_times = [6, 9, 12, 14, 18]  # Base hours (around 6:30, 9:30, etc.)
     random_offsets = [random.randint(-15, 15) for _ in range(5)]  # Random minutes offset
     post_times = []
 
