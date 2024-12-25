@@ -9,6 +9,23 @@ import os
 # File to track scrape and post history
 SCRAPE_LAST_RUN_FILE = "scrape_last_run.txt"
 
+def generate_random_tweet_schedule():
+    """
+    Generate a randomized tweet schedule with at least 3 hours between tweets.
+    Ensures no interval is exactly 3 hours.
+    """
+    start_time = datetime.now().replace(hour=6, minute=0, second=0, microsecond=0)  # Start at 6:00 AM
+    tweet_times = []
+
+    for _ in range(5):  # 5 tweets per day
+        # Add a random offset between 3 hours and 3 hours + 30 minutes (to avoid exact intervals)
+        offset_minutes = random.randint(180, 210)  # 3 hours (180 minutes) to 3 hours 30 minutes (210 minutes)
+        start_time += timedelta(minutes=offset_minutes)
+        tweet_times.append(start_time.strftime("%H:%M"))
+
+    print(f"Today's tweet schedule: {tweet_times}")
+    return tweet_times
+
 def get_last_run_time():
     """Check when the scraper was last run."""
     if os.path.exists(SCRAPE_LAST_RUN_FILE):
@@ -62,27 +79,33 @@ def run_daily_workflow(skip_initial_scrape=False):
     print("Scraping and modeling completed for the day.")
 
 def post_scheduled_tweets():
-    """Post tweets based on the random schedule."""
-    post_times = generate_random_post_times()
-    print(f"Today's tweet schedule: {[time.strftime('%H:%M') for time in post_times]}")
+    """Post tweets at scheduled times every day."""
+    while True:
+        today_schedule = generate_random_tweet_schedule()  # Generate a new schedule each day
+        today = datetime.now().strftime("%Y-%m-%d")
 
-    for i, target_time in enumerate(post_times):
-        now = datetime.now()
-        if now > target_time:
-            continue  # Skip past post times
+        for tweet_time in today_schedule:
+            # Parse the next tweet time
+            target_time = datetime.strptime(f"{today} {tweet_time}", "%Y-%m-%d %H:%M")
+            now = datetime.now()
 
-        # Wait until the next post time
-        time_to_wait = (target_time - now).total_seconds()
-        print(f"Waiting for {time_to_wait / 60:.2f} minutes to send the next tweet.")
-        time.sleep(time_to_wait)
+            if now > target_time:
+                continue  # Skip past tweet times
 
-        # Send the tweet with varying numbers of images
-        num_images = 4 if i % 4 == 0 else random.choice([1, 2, 3])  # 1st and 4th post: 4 images, others random
-        print(f"Posting tweet with {num_images} image(s)...")
-        send_tweet.send_tweet(max_images=num_images)
-        print(f"Tweet posted at {target_time.strftime('%H:%M')}!")
+            # Wait until the next scheduled time
+            time_to_wait = (target_time - now).total_seconds()
+            print(f"Waiting for {time_to_wait / 60:.2f} minutes to send the next tweet.")
+            time.sleep(time_to_wait)
 
-    print("All tweets for today have been posted.")
+            # Send the tweet
+            print(f"Posting tweet at {tweet_time}...")
+            send_tweet.send_tweet()
+            print(f"Tweet posted at {tweet_time}!")
+
+        # Sleep until the next day to repeat tweet scheduling
+        print("All tweets for today have been posted. Sleeping until tomorrow...")
+        time.sleep(60)  # Short sleep to avoid a busy loop
+
 
 def main():
     """Main function to manage daily scraping and tweet posting."""
