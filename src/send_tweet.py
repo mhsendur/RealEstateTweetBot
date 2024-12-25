@@ -6,6 +6,7 @@ import requests
 import time
 from google.cloud import storage
 import os
+import requests
 
 # Google Cloud Storage Configuration
 GCS_BUCKET_NAME = "real-estate-bot-bucket"
@@ -132,8 +133,32 @@ def save_posted_id(listing_id):
     with open(POSTED_IDS_FILE, "a") as file:
         file.write(f"{listing_id}\n")
 
-def process_random_listing(max_images=4):
-    """Process and tweet a random listing with a specified maximum number of images."""
+
+def is_listing_active(url):
+    """
+    Check if a listing is still active by comparing the requested URL to the final URL.
+    
+    Args:
+        url (str): The listing URL to check.
+
+    Returns:
+        bool: True if the listing is active, False otherwise.
+    """
+    try:
+        # Make a request to the URL and allow redirects
+        response = requests.get(url, allow_redirects=True, timeout=10)
+
+        # Check if the URL after redirects matches the original
+        if response.url != url:
+            print(f"Listing is closed. Original URL: {url}, Redirected URL: {response.url}")
+            return False
+        return True
+    except requests.RequestException as e:
+        print(f"Error checking listing URL {url}: {e}")
+        return False
+
+def process_random_listing(max_retries=3, retry_delay=60):
+    """Process and tweet a random listing, ensuring no duplicates and active status."""
     posted_ids = load_posted_ids()
     top_urls = load_top_urls()
     listings = load_listings_from_json()
@@ -142,62 +167,62 @@ def process_random_listing(max_images=4):
         print("No listings found in the file. Exiting...")
         return
 
-    selected_listing = random.choice(top_urls)
-    listing_id = selected_listing["id"]
+    for _ in range(max_retries):
+        # Randomly select a listing
+        selected_listing = random.choice(top_urls)
+        listing_id = selected_listing["id"]
+        listing_url = selected_listing["url"]
 
-    if listing_id in posted_ids:
-        print(f"Listing ID {listing_id} has already been tweeted. Skipping...")
-        return
+        # Skip if the listing has already been tweeted
+        if listing_id in posted_ids:
+            print(f"Listing ID {listing_id} has already been tweeted. Skipping...")
+            continue
 
-    try:
-        listing = find_listing_by_id(listings, listing_id)
-        if not listing:
-            print(f"Listing ID {listing_id} not found in the JSON data. Skipping...")
-            return
+        # Check if the listing is still active
+        if not is_listing_active(listing_url):
+            print(f"Listing ID {listing_id} is closed. Skipping...")
+            continue
 
-        title = listing.get("title", "N/A")
-        price = listing.get("priceDetail", {}).get("price", "N/A")
-        location = listing.get("locationSummary", "N/A")
-        description = listing.get("description", "No description available")
-        images = listing.get("imagesFullPath", [])
-
-        print(f"Processing Listing ID: {listing_id}, Title: {title}")
-
-        raw_data = f"Başlık: {title}\nFiyat: {price} TL\nKonum: {location}\nAçıklama: {description}"
-        tweet_text = OpenAI_API.create_tweet_text(raw_data)
-        tweet_text += f"\n🔗 Link: {selected_listing['url']}"
-
-        image_files = download_images(images, max_images=max_images)
-
-        success = False
         try:
-            print("Sending the tweet with media...")
-            response = Twitter_API.send_tweet_v2(tweet_text, image_files)
-            if response:
-                print("Tweet successfully sent with media.")
-                save_posted_id(listing_id)
-                success = True
+            # Proceed to process the listing (existing logic)
+            listing = find_listing_by_id(listings, listing_id)
+            if not listing:
+                print(f"Listing ID {listing_id} not found in the JSON data. Skipping...")
+                continue
+
+            # Extract details for the tweet
+            title = listing.get("title", "N/A")
+            price = listing.get("priceDetail", {}).get("price", "N/A")
+            location = listing.get("locationSummary", "N/A")
+            description = listing.get("description", "No description available")
+            images = listing.get("imagesFullPath", [])
+
+            print(f"Processing Listing ID: {listing_id}, Title: {title}")
+
+            # Generate tweet text
+            raw_data = f"Başlık: {title}\nFiyat: {price} TL\nKonum: {location}\nAçıklama: {description}"
+            tweet_text = OpenAI_API.create_tweet_text(raw_data)
+            tweet_text += f"\n🔗 Link: {listing_url}"
+
+            # Download images
+            image_files = download_images(images)
+
+            # Post the tweet
+            print("Sending the tweet...")
+            Twitter_API.send_tweet_v2(tweet_text, image_files)
+            print("Tweet successfully sent.")
+            save_posted_id(listing_id)  # Mark as posted
+            return  # Exit after successful tweet
         except Exception as e:
-            print(f"Error posting tweet with media for Listing ID {listing_id}: {e}")
+            print(f"Error processing Listing ID {listing_id}: {e}")
+        finally:
+            # Cleanup downloaded images
+            for image_file in image_files:
+                if os.path.exists(image_file):
+                    os.remove(image_file)
+                    print(f"Deleted temporary file: {image_file}")
 
-        if not success and listing_id not in posted_ids:
-            print("Retrying without media...")
-            try:
-                response = Twitter_API.send_tweet_v2(tweet_text)
-                if response:
-                    print("Tweet successfully sent without media.")
-                    save_posted_id(listing_id)
-            except Exception as e:
-                print(f"Error posting fallback tweet without media for Listing ID {listing_id}: {e}")
-
-        for image_file in image_files:
-            if os.path.exists(image_file):
-                os.remove(image_file)
-                print(f"Deleted temporary file: {image_file}")
-
-    except Exception as e:
-        print(f"Error processing Listing ID {listing_id}: {e}")
-
+    print("Failed to find an active and untweeted listing after all retries.")
 
 def send_tweet():
     process_random_listing()
