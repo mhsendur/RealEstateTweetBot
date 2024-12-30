@@ -211,30 +211,34 @@ def process_random_listing(max_retries=9, retry_delay=60):
             # Try posting with images
             success = False
             try:
-                print("Sending the tweet with media...")
+                print("Attempting to post the tweet with media...")
                 response = Twitter_API.send_tweet_v2(tweet_text, image_files)
-                if response:  # If response is valid, assume the tweet was posted
-                    print("Tweet successfully sent with media.")
+                if response:
+                    print(f"Tweet successfully sent with media for Listing ID {listing_id}.")
                     save_posted_id(listing_id)  # Mark as posted
                     success = True
-                    break  # Exit the loop after a successful tweet
+                    break
+            except tweepy.Forbidden as e:
+                print(f"Forbidden error while posting with media for Listing ID {listing_id}: {e}")
             except Exception as e:
                 print(f"Error posting tweet with media for Listing ID {listing_id}: {e}")
 
-            # Fallback: Retry without images
+            # Fallback: Retry without images if the first attempt fails
             if not success:
                 print("Retrying to send the tweet without media...")
                 try:
                     response = Twitter_API.send_tweet_v2(tweet_text)
                     if response:
-                        print("Tweet successfully sent without media.")
+                        print(f"Tweet successfully sent without media for Listing ID {listing_id}.")
                         save_posted_id(listing_id)  # Mark as posted
-                        break  # Exit the loop after a successful tweet
+                        break
+                except tweepy.Forbidden as e:
+                    print(f"Forbidden error while posting without media for Listing ID {listing_id}: {e}")
                 except Exception as e:
                     print(f"Error posting fallback tweet without media for Listing ID {listing_id}: {e}")
 
         except Exception as e:
-            print(f"Error processing Listing ID {listing_id}: {e}")
+            print(f"Unexpected error processing Listing ID {listing_id}: {e}")
 
         finally:
             # Cleanup downloaded images
@@ -248,6 +252,7 @@ def process_random_listing(max_retries=9, retry_delay=60):
         time.sleep(retry_delay)
 
     print("Failed to post any listing after all retries.")
+
 
 def send_tweet():
     process_random_listing()
