@@ -38,26 +38,38 @@ client = OpenAI(
 )
 
 def create_tweet_text(raw_data):
-    """Use OpenAI to generate a tweet text."""
+    """Use OpenAI to generate a creative and engaging tweet text."""
     try:
         prompt = (
-            "You are a real estate assistant generating tweets for property listings. "
-            "Each tweet should be engaging, concise (under 280 characters), and include: "
-            "1. Key details like title, price, location, and highlights. "
-            "2. A call-to-action encouraging readers to check it out. "
-            "3. Emojis to make it visually appealing.\n\n"
-            f"Here is the property information:\n{raw_data}\n"
-            "Generate a tweet for this listing in Turkish, but do NOT include any link or placeholder for a link in the tweet text."
+            "You are a creative real estate assistant generating tweets for property listings in Turkish. "
+            "Your goal is to make the tweet engaging, human-like, and avoid spam-like behavior. Each tweet must:\n"
+            "1. Be concise (under 280 characters).\n"
+            "2. Include the price of the listing explicitly.\n"
+            "3. Highlight key details (title, location, features, and unique selling points).\n"
+            "4. Use emojis to make the tweet visually appealing but not excessive (2-4 emojis is ideal).\n"
+            "5. Contain a compelling call-to-action encouraging engagement or exploration.\n"
+            "6. Be in Turkish and must NOT include any link or placeholder for a link.\n\n"
+            "Here is the property information:\n"
+            f"{raw_data}\n\n"
+            "Generate a creative tweet text following these guidelines. Ensure the tweet feels human, engaging, and unique."
         )
 
+        # OpenAI API call
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}]
         )
 
+        # Extracting the generated tweet text
         tweet_text = response.choices[0].message.content.strip()
+
+        # Ensuring price is included in the text (basic check)
+        if "TL" not in tweet_text:
+            tweet_text += "\n💵 Fiyatı kontrol etmeyi unutmayın!"
+
         return tweet_text
 
     except Exception as e:
         print(f"Error during OpenAI API call: {e}")
-        raise
+        return "İlan hakkında daha fazla bilgi alın! 🏡"
+
