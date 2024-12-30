@@ -7,7 +7,7 @@ import time
 import os
 
 # File to track scrape and post history
-SCRAPE_LAST_RUN_FILE = "scrape_last_run.txt"
+SCRAPE_LAST_RUN_FILE = "/home/istanbulrealestatebot/RealEstateTweetBot/src/scrape_last_run.txt"
 
 def generate_random_tweet_schedule():
     """
