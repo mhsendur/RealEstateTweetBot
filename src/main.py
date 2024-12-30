@@ -11,20 +11,20 @@ SCRAPE_LAST_RUN_FILE = "scrape_last_run.txt"
 
 def generate_random_tweet_schedule():
     """
-    Generate a randomized tweet schedule with at least 3 hours between tweets.
-    Ensures no interval is exactly 3 hours.
+    Generate a randomized tweet schedule with 3–4 tweets per day.
+    Ensure at least 3 hours and some randomness in intervals.
     """
     start_time = datetime.now().replace(hour=6, minute=0, second=0, microsecond=0)  # Start at 6:00 AM
     tweet_times = []
 
-    for _ in range(5):  # 5 tweets per day
-        # Add a random offset between 3 hours and 3 hours + 30 minutes (to avoid exact intervals)
-        offset_minutes = random.randint(180, 210)  # 3 hours (180 minutes) to 3 hours 30 minutes (210 minutes)
+    for _ in range(random.randint(3, 4)):  # 3 to 4 tweets per day
+        offset_minutes = random.randint(190, 240)  # Between 3h 10m to 4h
         start_time += timedelta(minutes=offset_minutes)
         tweet_times.append(start_time.strftime("%H:%M"))
 
     print(f"Today's tweet schedule: {tweet_times}")
     return tweet_times
+
 
 def get_last_run_time():
     """Check when the scraper was last run."""
