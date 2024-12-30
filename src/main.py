@@ -102,9 +102,15 @@ def post_scheduled_tweets():
             send_tweet.send_tweet()
             print(f"Tweet posted at {tweet_time}!")
 
+            # Pause briefly after posting to avoid triggering spam filters
+            pause_time = random.randint(30, 60)  # 30 to 60 seconds
+            print(f"Pausing for {pause_time} seconds before next action.")
+            time.sleep(pause_time)
+
         # Sleep until the next day to repeat tweet scheduling
         print("All tweets for today have been posted. Sleeping until tomorrow...")
-        time.sleep(60)  # Short sleep to avoid a busy loop
+        time.sleep(300)  # Sleep for 5 minutes before checking for the next day's schedule
+
 
 
 def main():
