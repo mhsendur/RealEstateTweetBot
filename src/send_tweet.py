@@ -157,6 +157,7 @@ def is_listing_active(url):
         print(f"Error checking listing URL {url}: {e}")
         return False
 
+
 def process_random_listing(max_retries=5, retry_delay=60):
     """Process and tweet a random listing, ensuring no duplicates and active status."""
     posted_ids = load_posted_ids()
@@ -184,7 +185,7 @@ def process_random_listing(max_retries=5, retry_delay=60):
             continue
 
         try:
-            # Proceed to process the listing (existing logic)
+            # Fetch the listing details
             listing = find_listing_by_id(listings, listing_id)
             if not listing:
                 print(f"Listing ID {listing_id} not found in the JSON data. Skipping...")
@@ -199,7 +200,7 @@ def process_random_listing(max_retries=5, retry_delay=60):
 
             print(f"Processing Listing ID: {listing_id}, Title: {title}")
 
-            # Generate tweet text
+            # Generate the tweet text
             raw_data = f"Başlık: {title}\nFiyat: {price} TL\nKonum: {location}\nAçıklama: {description}"
             tweet_text = OpenAI_API.create_tweet_text(raw_data)
             tweet_text += f"\n🔗 Link: {listing_url}"
@@ -207,14 +208,34 @@ def process_random_listing(max_retries=5, retry_delay=60):
             # Download images
             image_files = download_images(images)
 
-            # Post the tweet
-            print("Sending the tweet...")
-            Twitter_API.send_tweet_v2(tweet_text, image_files)
-            print("Tweet successfully sent.")
-            save_posted_id(listing_id)  # Mark as posted
-            return  # Exit after successful tweet
+            # Try posting with images
+            success = False
+            try:
+                print("Sending the tweet with media...")
+                response = Twitter_API.send_tweet_v2(tweet_text, image_files)
+                if response:  # If response is valid, assume the tweet was posted
+                    print("Tweet successfully sent with media.")
+                    save_posted_id(listing_id)  # Mark as posted
+                    success = True
+                    break  # Exit the loop after a successful tweet
+            except Exception as e:
+                print(f"Error posting tweet with media for Listing ID {listing_id}: {e}")
+
+            # Fallback: Retry without images
+            if not success:
+                print("Retrying to send the tweet without media...")
+                try:
+                    response = Twitter_API.send_tweet_v2(tweet_text)
+                    if response:
+                        print("Tweet successfully sent without media.")
+                        save_posted_id(listing_id)  # Mark as posted
+                        break  # Exit the loop after a successful tweet
+                except Exception as e:
+                    print(f"Error posting fallback tweet without media for Listing ID {listing_id}: {e}")
+
         except Exception as e:
             print(f"Error processing Listing ID {listing_id}: {e}")
+
         finally:
             # Cleanup downloaded images
             for image_file in image_files:
@@ -222,7 +243,11 @@ def process_random_listing(max_retries=5, retry_delay=60):
                     os.remove(image_file)
                     print(f"Deleted temporary file: {image_file}")
 
-    print("Failed to find an active and untweeted listing after all retries.")
+        # Retry delay before picking another listing
+        print(f"Retrying with another listing after {retry_delay} seconds...")
+        time.sleep(retry_delay)
+
+    print("Failed to post any listing after all retries.")
 
 def send_tweet():
     process_random_listing()
