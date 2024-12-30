@@ -21,7 +21,7 @@ auth = tweepy.OAuth1UserHandler(
 client_v1 = tweepy.API(auth)
 
 def upload_images_to_twitter(image_files):
-    """Upload images to Twitter and return media IDs."""
+    """Upload images to Twitter and return media IDs with pauses between uploads."""
     media_ids = []
     for image_file in image_files:
         try:
@@ -29,9 +29,15 @@ def upload_images_to_twitter(image_files):
             response = client_v1.media_upload(image_file)
             media_ids.append(response.media_id_string)
             print(f"Uploaded {image_file}, Media ID: {response.media_id_string}")
+            
+            # Add a pause after each upload to reduce API activity spikes
+            pause_time = random.randint(5, 15)  # Pause for 5 to 15 seconds
+            print(f"Pausing for {pause_time} seconds before the next upload.")
+            time.sleep(pause_time)
         except Exception as e:
             print(f"Failed to upload {image_file}: {e}")
     return media_ids
+
 
 
 def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
