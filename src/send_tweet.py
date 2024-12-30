@@ -158,7 +158,7 @@ def is_listing_active(url):
         return False
 
 
-def process_random_listing(max_retries=5, retry_delay=60):
+def process_random_listing(max_retries=9, retry_delay=60):
     """Process and tweet a random listing, ensuring no duplicates and active status."""
     posted_ids = load_posted_ids()
     top_urls = load_top_urls()
