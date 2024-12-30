@@ -3,6 +3,7 @@ import time
 import credentials
 import os
 import datetime
+import random
 
 # Initialize Twitter API clients
 client_v2 = tweepy.Client(
