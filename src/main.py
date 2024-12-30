@@ -39,23 +39,6 @@ def update_last_run_time():
     with open(SCRAPE_LAST_RUN_FILE, "w") as file:
         file.write(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-def generate_random_post_times():
-    """Generate 5 random post times for the day with at least 3 hours gap."""
-    base_times = [6, 9, 12, 15, 18]  # Base hours (around 6:30, 9:30, etc.)
-    random_offsets = [random.randint(-15, 15) for _ in range(5)]  # Random minutes offset
-    post_times = []
-
-    for i, hour in enumerate(base_times):
-        post_time = datetime.now().replace(hour=hour, minute=30, second=0, microsecond=0) + timedelta(minutes=random_offsets[i])
-        post_times.append(post_time)
-
-    # Ensure 3-hour gaps between posts
-    for i in range(1, len(post_times)):
-        if (post_times[i] - post_times[i - 1]).total_seconds() < 3 * 3600:
-            post_times[i] = post_times[i - 1] + timedelta(hours=3)
-
-    return post_times
-
 def run_daily_workflow(skip_initial_scrape=False):
     """Run scraping and modeling workflow at 2 AM."""
     now = datetime.now()
@@ -80,42 +63,52 @@ def run_daily_workflow(skip_initial_scrape=False):
 
 def post_scheduled_tweets():
     """Post tweets at scheduled times every day."""
-    while True:
-        today_schedule = generate_random_tweet_schedule()  # Generate a new schedule each day
-        today = datetime.now().strftime("%Y-%m-%d")
+    today_schedule = generate_random_tweet_schedule()  # Generate a new schedule each day
+    today = datetime.now().strftime("%Y-%m-%d")
 
-        for tweet_time in today_schedule:
-            # Parse the next tweet time
-            target_time = datetime.strptime(f"{today} {tweet_time}", "%Y-%m-%d %H:%M")
-            now = datetime.now()
+    for tweet_time in today_schedule:
+        # Parse the next tweet time
+        target_time = datetime.strptime(f"{today} {tweet_time}", "%Y-%m-%d %H:%M")
+        now = datetime.now()
 
-            if now > target_time:
-                continue  # Skip past tweet times
+        if now > target_time:
+            continue  # Skip past tweet times
 
-            # Wait until the next scheduled time
-            time_to_wait = (target_time - now).total_seconds()
-            print(f"Waiting for {time_to_wait / 60:.2f} minutes to send the next tweet.")
-            time.sleep(time_to_wait)
+        # Wait until the next scheduled time
+        time_to_wait = (target_time - now).total_seconds()
+        print(f"Waiting for {time_to_wait / 60:.2f} minutes to send the next tweet.")
+        time.sleep(time_to_wait)
 
-            # Send the tweet
-            print(f"Posting tweet at {tweet_time}...")
-            send_tweet.send_tweet()
-            print(f"Tweet posted at {tweet_time}!")
+        # Send the tweet
+        print(f"Posting tweet at {tweet_time}...")
+        send_tweet.send_tweet()
+        print(f"Tweet posted at {tweet_time}!")
 
-            # Pause briefly after posting to avoid triggering spam filters
-            pause_time = random.randint(30, 60)  # 30 to 60 seconds
-            print(f"Pausing for {pause_time} seconds before next action.")
-            time.sleep(pause_time)
+        # Pause briefly after posting to avoid triggering spam filters
+        pause_time = random.randint(30, 60)  # 30 to 60 seconds
+        print(f"Pausing for {pause_time} seconds before next action.")
+        time.sleep(pause_time)
 
-        # Sleep until the next day to repeat tweet scheduling
-        print("All tweets for today have been posted. Sleeping until tomorrow...")
-        time.sleep(300)  # Sleep for 5 minutes before checking for the next day's schedule
+    # Sleep until the next day to repeat tweet scheduling
+    print("All tweets for today have been posted. Sleeping until tomorrow...")
+    time.sleep(300)  # Sleep for 5 minutes before checking for the next day's schedule
 
-
+def post_test_tweet():
+    """Post a test tweet after the bot starts."""
+    print("Posting a test tweet to verify functionality...")
+    try:
+        send_tweet.send_tweet()
+        print("Test tweet posted successfully.")
+    except Exception as e:
+        print(f"Failed to post test tweet: {e}")
 
 def main():
     """Main function to manage daily scraping and tweet posting."""
     print("Starting the bot...")
+
+    # Post an initial test tweet to ensure everything works
+    post_test_tweet()
+
     first_run = True
     while True:
         now = datetime.now()
