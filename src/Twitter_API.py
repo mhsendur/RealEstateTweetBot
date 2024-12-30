@@ -39,7 +39,6 @@ def upload_images_to_twitter(image_files):
     return media_ids
 
 
-
 def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
     """Post a tweet with media using Twitter API v2 with fallback logic."""
     retries = 0
@@ -74,9 +73,15 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
             time.sleep(backoff_time)
             backoff_time *= 2
             retries += 1
+            
         except Exception as e:
             print(f"Unexpected error: {e}")
             break
+
+        # Add a random delay to mimic human behavior
+        pause_time = random.randint(10, 20)
+        print(f"Pausing for {pause_time} seconds between API actions...")
+        time.sleep(pause_time)
 
     print("Failed to post tweet after all retries.")
     return None
