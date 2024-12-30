@@ -56,7 +56,7 @@ def generate_random_post_times():
 
     return post_times
 
-def run_daily_workflow():
+def run_daily_workflow(skip_initial_scrape=False):
     """Run scraping and modeling workflow at 2 AM."""
     now = datetime.now()
     target_time = datetime(now.year, now.month, now.day, 2, 0)  # 2:00 AM today
@@ -64,7 +64,10 @@ def run_daily_workflow():
     if now > target_time:
         target_time += timedelta(days=1)
 
-    # Calculate wait time
+    if skip_initial_scrape:
+        print("Skipping initial web scraping and modeling.")
+        return
+
     time_to_wait = (target_time - now).total_seconds()
     print(f"Waiting until 2:00 AM to start scraping and modeling...")
     time.sleep(time_to_wait)
@@ -74,7 +77,7 @@ def run_daily_workflow():
     modeling.run_modeling()
     update_last_run_time()
     print("Scraping and modeling completed for the day.")
-    
+
 def post_scheduled_tweets():
     """Post tweets at scheduled times every day."""
     while True:
@@ -113,16 +116,15 @@ def post_scheduled_tweets():
 def main():
     """Main function to manage daily scraping and tweet posting."""
     print("Starting the bot...")
-
-    # Perform initial scraping and modeling immediately
-    run_daily_workflow()
-
+    first_run = True
     while True:
         now = datetime.now()
         last_run = get_last_run_time()
 
-        # Run daily workflow if it's been more than 24 hours since the last run
-        if (now - last_run) >= timedelta(hours=24):
+        if first_run:
+            run_daily_workflow(skip_initial_scrape=True)
+            first_run = False
+        elif (now - last_run) >= timedelta(hours=24):
             run_daily_workflow()
 
         post_scheduled_tweets()
