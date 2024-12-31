@@ -69,7 +69,7 @@ This project involves the development of a Twitter bot that autonomously selects
         
         OpenAI:
             -> api_key
-5. Run main.py
+5. Run main.py that is in the 'src' folder.
     
 
 ## Model Training and Evaluation
