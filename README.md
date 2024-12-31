@@ -74,7 +74,7 @@ The bot account can be reached at: https://x.com/_RealEstateBot.
             
         - **Amenity Scores**: Presence of amenities like pools, balconies, and security, represented as binary features.
             
-        - **Sentiment Analysis of Descriptions**: Sentiment analysis of property descriptions to understand if positive or compelling language impacts property value.
+        - **Sentiment Analysis of Descriptions**: Sentiment analysis of property descriptions to understand if positive or compelling language impacts property value (Tested).
             
         - **Keyword Analysis**: Specific keywords in descriptions (e.g., "urgent", "close to metro") were used as binary features to capture the effect of specific selling points.
             
