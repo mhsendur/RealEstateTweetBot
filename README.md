@@ -1,4 +1,3 @@
-```markdown
 # Twitter Bot for Real Estate Recommendations
 
 ## Overview
@@ -212,4 +211,4 @@ Tracks key metrics such as:
 - **Advanced Analytics**: Build dashboards for real-time performance monitoring.
 
 > *This project demonstrates the potential of automation and AI in real estate marketing, developed for educational purposes.*
-```
+
