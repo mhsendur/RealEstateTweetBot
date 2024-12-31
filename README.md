@@ -1,80 +1,54 @@
+```markdown
 # Twitter Bot for Real Estate Recommendations
 
 ## Overview
+This project involves the development of a **Twitter bot** designed to autonomously promote real estate properties in **Istanbul, Turkey**. By leveraging **data analytics** and **machine learning**, the bot identifies the best-value properties, generates engaging tweets, and posts them to Twitter. The goal is to attract potential buyers and investors by showcasing high-value real estate listings in an appealing manner. The bot account can be reached at https://x.com/_RealEstateBot.
 
-This project involves the development of a Twitter bot that autonomously selects and promotes high-value real estate properties based on their cost-to-value ratio. The bot connects to a real estate database, analyzes the data to identify the best deals, and generates engaging tweets that are posted on Twitter. The main goal is to attract a broad audience interested in real estate investments in Istanbul, Turkey by promoting properties with the most appealing value propositions.
+---
 
-### Objectives
+## Key Objectives
 
-- **Data Analysis and Selection**: Identify properties with the best value/cost ratio by analyzing real estate data.
-    
-- **Information Summarization**: Extract and condense essential information from property listings into a brief, Twitter-friendly format.
-    
-- **Twitter Bot Development**: Automate tweets with the extracted property data to engage with potential buyers.
-    
-- **Audience Engagement**: Maximize engagement and follower growth on Twitter through targeted and well-crafted tweets.
-    
+- **Property Value Assessment**: Analyze and rank properties based on their value/cost ratio.
+- **Content Creation**: Generate engaging and concise property descriptions for tweets using AI.
+- **Twitter Automation**: Automate the process of selecting, drafting, and posting tweets.
+- **User Engagement**: Enhance interaction and attract followers through visually appealing and well-structured content.
+
+---
 
 ## Features
 
-- **Database Integration**: Connects to a real estate database to fetch property data.
-    
-- **Data Analysis**: Uses statistical and machine learning models to evaluate property values and select top properties.
-    
-- **Natural Language Processing (NLP)**: Summarizes property descriptions into short, appealing tweets.
-    
-- **Twitter API**: Posts property recommendations to Twitter automatically.
-    
-- **Analytics and Monitoring**: Tracks the performance of the bot, including follower growth and engagement metrics.
-    
+### Data Integration and Analysis
+- **Web Scraping**: Automatically fetches real estate data daily from Istanbul's top real estate platforms.
+- **Google Cloud Storage**: Securely stores and updates scraped data in a centralized bucket.
+- **Machine Learning Models**: Employs predictive models to identify undervalued properties.
 
-## Getting Started
+### Tweet Crafting
+- **Natural Language Processing**: Uses OpenAI’s GPT API to transform property details into engaging, human-like tweets.
+- **Dynamic Tweet Schedules**: Posts tweets at randomized intervals to maintain engagement and avoid predictability.
 
-### Prerequisites
+### Automation
+- **Daily Workflows**:
+  - Fetch fresh property data.
+  - Update predictive models for ranking listings.
+  - Post selected listings automatically.
+- **Error Handling**: Implements retry mechanisms for resilience against temporary failures.
 
-- **Python 3.8+**
-    
-- **Pandas**, **NumPy**, **scikit-learn**, **transformers**, **nltk**, **matplotlib**
-    
-- **Twitter API Access**: Requires Twitter Developer account to get API keys for automating tweets.
-    
-- **Real Estate Dataset**: The project requires a real estate dataset with property details, including features like location, price, room count, and more.
-    
+### Performance Monitoring
+Tracks key metrics such as:
+- Tweet engagement
+- Impressions
+- Click-through rates
 
-### Installation and Setup
+---
 
-1. Clone this repository:
-    
-    ```
-    git clone https://github.com/mhsendur/RealEstateTweetBot
-    ```
-2. Change Directoy to 'src' folder
+## Architecture
 
-3. Install required dependencies.
-    
-4. Set up 'credentials.py':
-    a) create credentials.py file.
-    b) Get API credentials from Twitter and OpenAI
-    c) Initialize following parameters, correspondingly:
+### Google Cloud Integration
+- **Storage**: Google Cloud Storage manages real estate datasets and processed results.
+- **Scalability**: Cloud-based architecture ensures reliable data handling and accessibility.
 
-        Twitter:
-            -> consumer_key
-            -> consumer_secret
-            -> access_token
-            -> access_token_secret
-            
-            OAuth 2.0 
-            -> client_id 
-            -> client_secret
-        
-        OpenAI:
-            -> api_key
-5. Run main.py that is in the 'src' folder.
-    
-
-## Model Training and Evaluation
-
-- **Model Type**: Random Forest, Gradient Boosting, XGBoost and other model types have been tested for value prediction.
+### Machine Learning
+- **Models**: Random Forest, Gradient Boosting, XGBoost and other model types have been tested for value prediction.
     
 - **Feature Engineering**: A significant effort has been made in feature engineering to improve the model's predictive performance. Below is a detailed overview of the feature engineering process and features that have been tried:
     
@@ -115,40 +89,127 @@ This project involves the development of a Twitter bot that autonomously selects
         - **Age-to-Floor Ratio**: To see how building age relates to the number of floors.
             
     - **Geospatial Clustering**: Properties were clustered based on geographic coordinates to create a categorical "location cluster" feature that captures regional trends better than latitude and longitude alone.
-        
+
 - **Performance Metrics**: Models are evaluated based on Mean Squared Error (MSE), Root Mean Squared Error (RMSE), Mean Absolute Error (MAE), and R² score.
 
-## Twitter Bot Runtime
 
-- **Data Collection**: 
-    a) Istanbul Real Estate Data is retrived through our webscraping scripts. In runtime, it is done daily.
-    b) Data is prepared for modelling
-
-- **Modelling**: 
-    a) Above-mentioned techniques are used to train the model.
-    b) Since the data is renewed daily, and the model is trained daily, the predictions are always up to date and robust.
-
-- **Ad Selection**: 
-    a) Random Forest model selects best 100 real estate ads from the test set by selecting the most underpriced ones.
-    b) 5 ads are selected to be tweeted randomly out of this 100.
-
-- **Tweet Preparation**: 
-    a) Necessary information about the ad is retrieved.
-    b) The info is sent to the OpenAI API with an optimized prompt.
-    c) The response is the tweet to be sent.
-
-- **Tweeting**: 
-    a) The tweet is sent utilizing TwitterAPI
-    b) Robustness is established through handling exceptions.
-
-
-## Contributors
-
-- Mustafa Harun Sendur
-- Melih Cihan Kiziltoprak
-- Ceren Sahin
-- Dila Karatas
+### Twitter Bot Workflow
+1. **Web Scraping**:
+   - Extracts property data daily.
+   - Manages changes in listings (e.g., closed or updated properties).
+2. **Modeling**:
+   - Predicts undervalued properties using trained models.
+   - Dynamically updates based on the latest data.
+3. **Tweeting**:
+   - Crafts tweets using GPT API with a focus on Turkish real estate.
+   - Posts at randomized times for authenticity.
 
 ---
 
-This project has been built for educational purposes only.
+## Getting Started
+
+### Prerequisites
+- **Python** 3.8+
+- **Google Cloud SDK**
+- **Twitter Developer Account** for API access
+- **OpenAI API key**
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/mhsendur/RealEstateTweetBot
+   cd RealEstateTweetBot/src
+   ```
+
+2. Set up your Python environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+3. Configure API credentials:
+   - Create a `credentials.py` file with the following variables:
+     ```python
+     # Twitter API
+     consumer_key = "your_consumer_key"
+     consumer_secret = "your_consumer_secret"
+     access_token = "your_access_token"
+     access_token_secret = "your_access_token_secret"
+     client_id = "your_client_id"
+     client_secret = "your_client_secret"
+
+     # OpenAI API
+     api_key = "your_openai_api_key"
+     ```
+
+4. Configure Google Cloud Storage:
+   - Set up a Google Cloud project.
+   - Create a bucket for storing property data.
+   - Grant appropriate permissions for the storage service.
+
+5. Run the bot:
+   ```bash
+   python main.py
+   ```
+
+---
+
+## Machine Learning and Analytics
+
+### Models
+- **Random Forest**: Primary model for value prediction.
+- **Gradient Boosting**: Backup model for comparison.
+
+### Feature Engineering
+- **District-level**: Population density, growth, and socio-economic scores.
+- **Property-level**: Room count, amenities, and proximity to key landmarks.
+- **Sentiment Analysis**: Evaluates listing descriptions for compelling language.
+
+### Performance Metrics
+- **Accuracy**: Measures prediction reliability.
+- **Engagement**: Monitors tweet performance (likes, retweets, impressions).
+
+---
+
+## Runtime Workflow
+
+1. **Daily Property Scraping**:
+   - Collects and updates real estate data.
+   - Uploads the latest dataset to Google Cloud Storage.
+
+2. **Modeling**:
+   - Retrains the model daily with fresh data.
+   - Predicts and ranks properties based on value.
+
+3. **Tweet Scheduling**:
+   - Selects top listings for the day.
+   - Posts 3–4 tweets at randomized intervals.
+   - Ensures no duplicate or closed listings are posted.
+
+4. **Tweet Content**:
+   - Generates visually appealing and informative tweets with OpenAI.
+   - Includes price, highlights, and a compelling call-to-action.
+
+5. **Error Handling**:
+   - Retries failed actions (e.g., API errors).
+   - Skips closed or unavailable listings.
+
+---
+
+## Contributors
+- **Mustafa Harun Sendur**
+- **Melih Cihan Kiziltoprak**
+- **Ceren Sahin**
+- **Dila Karatas**
+
+---
+
+## Future Improvements
+- **Enhanced Engagement**: Experiment with different tweet styles and hashtags to boost visibility.
+- **Geospatial Insights**: Integrate maps for location visualization.
+- **Advanced Analytics**: Build dashboards for real-time performance monitoring.
+
+> *This project demonstrates the potential of automation and AI in real estate marketing, developed for educational purposes.*
+```
