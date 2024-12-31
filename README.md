@@ -172,16 +172,16 @@ The bot account can be reached at: https://x.com/_RealEstateBot.
 ## Runtime Workflow
 
 1. **Daily Property Scraping**:
-   - Collects and updates real estate data.
+   - Collects and updates real estate data at 2 AM GMT every day.
    - Uploads the latest dataset to Google Cloud Storage.
 
 2. **Modeling**:
    - Retrains the model daily with fresh data.
-   - Predicts and ranks properties based on value.
+   - Predicts and ranks 100 properties based on value.
 
 3. **Tweet Scheduling**:
-   - Selects top listings for the day.
-   - Posts 3–4 tweets at randomized intervals.
+   - Randomly selects the top listings for the day.
+   - Posts 3–4 tweets at randomized intervals. **Randomization is done to avoid spam-like behavior on the platform, factors such as tweet post time & image count of the post are random.**
    - Ensures no duplicate or closed listings are posted.
 
 4. **Tweet Content**:
