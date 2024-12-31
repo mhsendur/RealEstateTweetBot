@@ -30,15 +30,10 @@ The bot account can be reached at: https://x.com/_RealEstateBot.
 ### Automation
 - **Daily Workflows**:
   - Fetch fresh property data.
-  - Update predictive models for ranking listings.
+  - Update the predictive model for ranking listings.
   - Post selected listings automatically.
 - **Error Handling**: Implements retry mechanisms for resilience against temporary failures.
 
-### Performance Monitoring
-Tracks key metrics such as:
-- Tweet engagement
-- Impressions
-- Click-through rates
 
 ---
 
