@@ -1,7 +1,7 @@
 # Twitter Bot for Real Estate Recommendations
 
 ## Overview
-This project involves the development of a **Twitter bot** designed to autonomously promote real estate properties in **Istanbul, Turkey**. By leveraging **data analytics** and **machine learning**, the bot identifies the best-value properties, generates engaging tweets, and posts them to Twitter. The goal is to attract potential buyers and investors by showcasing high-value real estate listings in an appealing manner. The bot account can be reached at https://x.com/_RealEstateBot.
+This project involves the development of a **Twitter bot** designed to autonomously promote real estate properties in **Istanbul, Turkey**. By leveraging **data analytics** and **machine learning**, the bot identifies the best-value properties, generates engaging tweets, and posts them to Twitter. The goal is to attract potential buyers and investors by showcasing high-value real estate listings in an appealing manner. The bot account can be reached at: https://x.com/_RealEstateBot.
 
 ---
 
