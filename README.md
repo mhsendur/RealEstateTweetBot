@@ -194,6 +194,22 @@ The bot account can be reached at: https://x.com/_RealEstateBot.
 
 ---
 
+## Data Visualizations
+
+### Frequency of Estate Types
+
+<img width="1181" alt="Screenshot 2024-12-31 at 14 41 01" src="https://github.com/user-attachments/assets/ee6fb801-73f8-43c9-b14a-0308128f6c9e" />
+
+### Distribution of Several Features
+
+<img width="1451" alt="Screenshot 2024-12-31 at 14 42 00" src="https://github.com/user-attachments/assets/4018a20a-e6a4-43cd-b8c8-2d056fe2a287" />
+
+### Feature Importances
+
+<img width="1356" alt="Screenshot 2024-12-31 at 14 42 29" src="https://github.com/user-attachments/assets/ef438df2-1cbd-4cb0-9cdd-28a15332f4bf" />
+
+
+---
 ## Contributors
 - **Mustafa Harun Sendur**
 - **Melih Cihan Kiziltoprak**
