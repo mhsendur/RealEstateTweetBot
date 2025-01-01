@@ -40,13 +40,24 @@ def upload_images_to_twitter(image_files):
     return media_ids
 
 
-def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
-    """Post a tweet with media using Twitter API v2 with fallback logic."""
+import time
+import random
+import datetime
+
+def send_tweet_v2(tweet_text, image_files=None, max_retries=7, timeout_seconds=300):
+    """Post a tweet with media using Twitter API v2 with fallback logic and timeout."""
     retries = 0
     backoff_time = 5
     media_ids = upload_images_to_twitter(image_files) if image_files else []
+    start_time = datetime.datetime.now()
 
     while retries <= max_retries:
+        # Check if timeout has been exceeded
+        elapsed_time = (datetime.datetime.now() - start_time).total_seconds()
+        if elapsed_time > timeout_seconds:
+            print(f"Timeout of {timeout_seconds} seconds exceeded. Skipping this tweet.")
+            break
+
         try:
             if media_ids:
                 print("Attempting to post tweet with media...")
@@ -72,9 +83,9 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
         except tweepy.TooManyRequests as e:
             print(f"Rate limit reached. Retrying after backoff...")
             time.sleep(backoff_time)
-            backoff_time *= 2
+            backoff_time = min(backoff_time * 2, timeout_seconds)  # Cap backoff at timeout_seconds
             retries += 1
-            
+
         except Exception as e:
             print(f"Unexpected error: {e}")
             break
@@ -84,6 +95,6 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
         print(f"Pausing for {pause_time} seconds between API actions...")
         time.sleep(pause_time)
 
-    print("Failed to post tweet after all retries.")
+    print("Failed to post tweet after all retries or timeout.")
     return None
 
