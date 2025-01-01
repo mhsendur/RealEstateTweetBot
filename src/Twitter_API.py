@@ -53,7 +53,7 @@ def send_tweet_v2(tweet_text, image_files=None, max_retries=5):
                 response = client_v2.create_tweet(text=tweet_text, media_ids=media_ids)
             else:
                 print("Attempting to post tweet without media...")
-                response = client_v2.create_tweet(text=tweet_text)
+                # response = client_v2.create_tweet(text=tweet_text)
 
             if response and "data" in response and "id" in response.data:
                 tweet_id = response.data['id']
